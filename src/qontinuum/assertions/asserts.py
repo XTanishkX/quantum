@@ -12,6 +12,7 @@ from __future__ import annotations
 from typing import Any
 
 from qontinuum.assertions import stats
+from qontinuum.assertions.context import record
 
 
 class QuantumAssertionError(AssertionError):
@@ -62,6 +63,7 @@ def assert_distribution(
             f"or raise the threshold to >= {floor:.4g}."
         )
     value = stats.tvd(counts, expected)
+    record("tvd", value, tvd_threshold)
     if value > tvd_threshold:
         top = sorted(counts.items(), key=lambda kv: -kv[1])[:4]
         observed = ", ".join(f"{k}: {v / shots:.3f}" for k, v in top)
@@ -90,6 +92,7 @@ def assert_chi_squared(
     statistic, p_value = stats.chi_squared_pvalue(
         counts, expected, unexpected_tolerance=unexpected_tolerance
     )
+    record("chi2_pvalue", p_value, alpha)
     if p_value < alpha:
         raise QuantumAssertionError(
             f"chi-squared test rejects the expected distribution "
@@ -109,6 +112,7 @@ def assert_fidelity(
     counts = _counts_of(result)
     expected = stats.validate_expected(expected)
     value = stats.hellinger_fidelity(counts, expected)
+    record("fidelity", value, min_fidelity)
     if value < min_fidelity:
         raise QuantumAssertionError(
             f"fidelity {value:.4f} below minimum {min_fidelity}",
@@ -128,6 +132,7 @@ def assert_probability(
     counts = _counts_of(result)
     shots = sum(counts.values())
     p = counts.get(outcome.replace(" ", ""), 0) / shots
+    record(f"P({outcome})", p, None)
     if not (min_p <= p <= max_p):
         raise QuantumAssertionError(
             f"P({outcome}) = {p:.4f} outside [{min_p}, {max_p}] ({shots} shots)",
@@ -149,6 +154,7 @@ def assert_matches_baseline(
     counts = _counts_of(result)
     baseline = stats.normalize_counts(baseline)
     _, p_value = stats.two_sample_pvalue(counts, baseline)
+    record("baseline_pvalue", p_value, alpha)
     if p_value < alpha:
         distance = stats.tvd_two_sample(counts, baseline)
         raise QuantumAssertionError(

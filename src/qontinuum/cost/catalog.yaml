@@ -4,6 +4,10 @@
 # produced from this catalog are pre-run approximations, not quotes: gate
 # counts are taken from the circuit as written (not the provider's compiled
 # form) and duration-priced devices use a parametric runtime model.
+#
+# quality: blocks are approximate median error rates from vendor-published
+# specs (order-of-magnitude routing guidance, not calibration data).
+# connectivity is one of: all_to_all, heavy_hex, square, linear.
 catalog_version: 1
 verified: "2026-07-12"
 sources:
@@ -21,30 +25,55 @@ providers:
         model: per_shot
         per_task: 0.30
         per_shot: 0.08
+        quality:
+          error_1q: 0.0002
+          error_2q: 0.004
+          error_readout: 0.005
+          connectivity: all_to_all
       rigetti_cepheus:
         display: Rigetti Cepheus
         qubits: 108
         model: per_shot
         per_task: 0.30
         per_shot: 0.000425
+        quality:
+          error_1q: 0.001
+          error_2q: 0.015
+          error_readout: 0.05
+          connectivity: square
       iqm_garnet:
         display: IQM Garnet
         qubits: 20
         model: per_shot
         per_task: 0.30
         per_shot: 0.00145
+        quality:
+          error_1q: 0.001
+          error_2q: 0.005
+          error_readout: 0.02
+          connectivity: square
       iqm_emerald:
         display: IQM Emerald
         qubits: 54
         model: per_shot
         per_task: 0.30
         per_shot: 0.0016
+        quality:
+          error_1q: 0.001
+          error_2q: 0.007
+          error_readout: 0.025
+          connectivity: square
       aqt_ibex:
         display: AQT IBEX-Q1
         qubits: 12
         model: per_shot
         per_task: 0.30
         per_shot: 0.0235
+        quality:
+          error_1q: 0.002
+          error_2q: 0.02
+          error_readout: 0.01
+          connectivity: all_to_all
 
   ibm:
     display: IBM Quantum
@@ -59,6 +88,11 @@ providers:
           per_shot_s: 0.00025  # default repetition delay between shots
           per_layer_s: 1.0e-7  # per circuit layer within a shot
         note: runtime estimated; open plan includes free monthly minutes
+        quality:
+          error_1q: 0.00025
+          error_2q: 0.003
+          error_readout: 0.01
+          connectivity: heavy_hex
 
   azure:
     display: Azure Quantum
@@ -71,6 +105,11 @@ providers:
         rate_2q: 0.000975
         min_program: 12.4166
         note: error mitigation off (default-on raises minimum to $97.50)
+        quality:
+          error_1q: 0.0005
+          error_2q: 0.006
+          error_readout: 0.005
+          connectivity: all_to_all
       ionq_forte_azure:
         display: IonQ Forte 1
         qubits: 36
@@ -79,6 +118,11 @@ providers:
         rate_2q: 0.001121
         min_program: 25.7899
         note: error mitigation off (default-on raises minimum to $168.20)
+        quality:
+          error_1q: 0.0002
+          error_2q: 0.004
+          error_readout: 0.005
+          connectivity: all_to_all
       quantinuum_h2:
         display: Quantinuum H2
         qubits: 56
@@ -86,3 +130,8 @@ providers:
         unit: HQC
         per_unit: null
         note: PAYG dollar rate not public; shown in HQC credits
+        quality:
+          error_1q: 0.00003
+          error_2q: 0.0015
+          error_readout: 0.0015
+          connectivity: all_to_all

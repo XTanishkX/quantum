@@ -15,5 +15,8 @@ htmlcov/
 .idea/
 .vscode/
 
-# Qontinuum local artifacts
-.qontinuum/cache/
+# Qontinuum local artifacts (snapshots.json IS committed; these are not)
+**/.qontinuum/cache/
+**/.qontinuum/history.jsonl
+qontinuum-report.md
+qontinuum-dashboard.html
