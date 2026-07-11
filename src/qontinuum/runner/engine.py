@@ -11,6 +11,7 @@ from qontinuum.assertions.asserts import (
     StatisticallyUnsoundError,
     assert_matches_baseline,
 )
+from qontinuum.assertions.context import capture_assertions
 from qontinuum.report.schema import CheckResult, Status, SuiteResult, TestResult
 from qontinuum.runner.backends import execute
 from qontinuum.runner.discovery import DiscoveredTest, discover
@@ -87,23 +88,34 @@ def _run_test(
 
 
 def _evaluate(name: str, thunk) -> CheckResult:
-    try:
-        thunk()
-        return CheckResult(name=name, status=Status.PASS)
-    except QuantumAssertionError as exc:
-        return CheckResult(
-            name=name,
-            status=Status.FAIL,
-            message=str(exc),
-            statistic=exc.statistic,
-            threshold=exc.threshold,
-        )
-    except StatisticallyUnsoundError as exc:
-        return CheckResult(name=name, status=Status.ERROR, message=str(exc))
-    except AssertionError as exc:
-        return CheckResult(name=name, status=Status.FAIL, message=str(exc) or "assertion failed")
-    except Exception as exc:
-        return CheckResult(name=name, status=Status.ERROR, message=f"{type(exc).__name__}: {exc}")
+    with capture_assertions() as events:
+        try:
+            thunk()
+            result = CheckResult(name=name, status=Status.PASS)
+        except QuantumAssertionError as exc:
+            return CheckResult(
+                name=name,
+                status=Status.FAIL,
+                message=str(exc),
+                statistic=exc.statistic,
+                threshold=exc.threshold,
+            )
+        except StatisticallyUnsoundError as exc:
+            return CheckResult(name=name, status=Status.ERROR, message=str(exc))
+        except AssertionError as exc:
+            return CheckResult(
+                name=name, status=Status.FAIL, message=str(exc) or "assertion failed"
+            )
+        except Exception as exc:
+            return CheckResult(
+                name=name, status=Status.ERROR, message=f"{type(exc).__name__}: {exc}"
+            )
+    # Passing checks keep their computed statistic (last assertion in the
+    # check) so trend charts work on healthy suites, not just broken ones.
+    if events:
+        result.statistic = events[-1].statistic
+        result.threshold = events[-1].threshold
+    return result
 
 
 def _snapshot_check(

@@ -18,6 +18,7 @@ class CircuitProfile:
     n_2q_gates: int
     n_multi_qubit_gates_expanded: int  # multi-controlled gates as 6*(n-2) two-qubit gates
     n_spam: int  # state prep + measure + reset (prep counted once per qubit)
+    n_measurements: int  # measure instructions only
 
     @property
     def n_2q_effective(self) -> int:
@@ -26,7 +27,7 @@ class CircuitProfile:
 
 
 def profile_circuit(circuit: QuantumCircuit) -> CircuitProfile:
-    n_1q = n_2q = n_multi = 0
+    n_1q = n_2q = n_multi = n_measure = 0
     n_spam = circuit.num_qubits  # implicit initial state preparation
     for instruction in circuit.data:
         name = instruction.operation.name
@@ -34,6 +35,8 @@ def profile_circuit(circuit: QuantumCircuit) -> CircuitProfile:
             continue
         if name in _SPAM:
             n_spam += 1
+            if name == "measure":
+                n_measure += 1
             continue
         arity = len(instruction.qubits)
         if arity <= 1:
@@ -50,4 +53,5 @@ def profile_circuit(circuit: QuantumCircuit) -> CircuitProfile:
         n_2q_gates=n_2q,
         n_multi_qubit_gates_expanded=n_multi,
         n_spam=n_spam,
+        n_measurements=n_measure,
     )
