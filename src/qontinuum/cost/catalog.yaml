@@ -1,0 +1,88 @@
+# Qontinuum device pricing catalog.
+#
+# Prices verified against public provider pages on the date below. Estimates
+# produced from this catalog are pre-run approximations, not quotes: gate
+# counts are taken from the circuit as written (not the provider's compiled
+# form) and duration-priced devices use a parametric runtime model.
+catalog_version: 1
+verified: "2026-07-12"
+sources:
+  - https://aws.amazon.com/braket/pricing/
+  - https://learn.microsoft.com/en-us/azure/quantum/pricing
+  - https://quantum.cloud.ibm.com/docs/en/guides/manage-cost
+
+providers:
+  braket:
+    display: AWS Braket
+    devices:
+      ionq_forte:
+        display: IonQ Forte
+        qubits: 36
+        model: per_shot
+        per_task: 0.30
+        per_shot: 0.08
+      rigetti_cepheus:
+        display: Rigetti Cepheus
+        qubits: 108
+        model: per_shot
+        per_task: 0.30
+        per_shot: 0.000425
+      iqm_garnet:
+        display: IQM Garnet
+        qubits: 20
+        model: per_shot
+        per_task: 0.30
+        per_shot: 0.00145
+      iqm_emerald:
+        display: IQM Emerald
+        qubits: 54
+        model: per_shot
+        per_task: 0.30
+        per_shot: 0.0016
+      aqt_ibex:
+        display: AQT IBEX-Q1
+        qubits: 12
+        model: per_shot
+        per_task: 0.30
+        per_shot: 0.0235
+
+  ibm:
+    display: IBM Quantum
+    devices:
+      heron_payg:
+        display: Heron (Pay-As-You-Go)
+        qubits: 156
+        model: per_second
+        per_second: 1.60
+        runtime:
+          overhead_s: 1.0      # job setup / load
+          per_shot_s: 0.00025  # default repetition delay between shots
+          per_layer_s: 1.0e-7  # per circuit layer within a shot
+        note: runtime estimated; open plan includes free monthly minutes
+
+  azure:
+    display: Azure Quantum
+    devices:
+      ionq_aria:
+        display: IonQ Aria 1
+        qubits: 25
+        model: gate_shot
+        rate_1q: 0.000220
+        rate_2q: 0.000975
+        min_program: 12.4166
+        note: error mitigation off (default-on raises minimum to $97.50)
+      ionq_forte_azure:
+        display: IonQ Forte 1
+        qubits: 36
+        model: gate_shot
+        rate_1q: 0.0001645
+        rate_2q: 0.001121
+        min_program: 25.7899
+        note: error mitigation off (default-on raises minimum to $168.20)
+      quantinuum_h2:
+        display: Quantinuum H2
+        qubits: 56
+        model: hqc
+        unit: HQC
+        per_unit: null
+        note: PAYG dollar rate not public; shown in HQC credits
