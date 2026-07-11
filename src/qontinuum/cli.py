@@ -49,6 +49,54 @@ def test(
     raise typer.Exit(_exit_code(suite))
 
 
+@app.command()
+def cost(
+    path: PathArg = Path("."),
+    shots: Annotated[
+        int | None,
+        typer.Option(help="Override the shot count of every test for the estimate."),
+    ] = None,
+) -> None:
+    """Estimate what running the discovered tests on real hardware would cost."""
+    from rich.table import Table
+
+    from qontinuum.cost import estimate_suite
+    from qontinuum.runner.discovery import discover
+
+    if not path.exists():
+        console.print(f"[red]path not found:[/red] {path}")
+        raise typer.Exit(2)
+    items = discover(path)
+    if not items:
+        console.print("[yellow]no quantum tests found (looked for q_test_*.py)[/yellow]")
+        raise typer.Exit(2)
+
+    pairs = []
+    for item in items:
+        circuit = item.test.build()
+        pairs.append((circuit, shots or item.test.shots))
+    estimates = estimate_suite(pairs)
+
+    total_shots = sum(s for _, s in pairs)
+    table = Table(
+        title=f"Estimated hardware cost — {len(pairs)} test(s), {total_shots} total shots"
+    )
+    table.add_column("Provider")
+    table.add_column("Device")
+    table.add_column("Est. cost", justify="right")
+    table.add_column("Notes", style="dim")
+    for est in estimates:
+        if not est.feasible:
+            price = "[dim]—[/dim]"
+        elif est.usd is not None:
+            price = f"${est.usd:,.2f}"
+        else:
+            price = est.units
+        table.add_row(est.provider, est.display, price, est.note)
+    console.print(table)
+    console.print("[dim]Pre-run estimates from the public pricing catalog; not quotes.[/dim]")
+
+
 @snapshot_app.command("update")
 def snapshot_update(path: PathArg = Path("."), seed: SeedOpt = None) -> None:
     """Re-record golden baselines for every snapshot-enabled test."""
