@@ -1,0 +1,15 @@
+{
+  "schema": 1,
+  "snapshots": {
+    "ghz/q_test_ghz.py::ghz_5": {
+      "backend": "aer",
+      "circuit_hash": "sha256:14eb444da82e2dfcb1175a684a4978f036994adb7a71a7240317f8ec2a4757a1",
+      "counts": {
+        "00000": 2001,
+        "11111": 1999
+      },
+      "created_at": "2026-07-11T20:04:18+00:00",
+      "shots": 4000
+    }
+  }
+}
