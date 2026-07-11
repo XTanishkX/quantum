@@ -5,11 +5,23 @@
       "backend": "aer",
       "circuit_hash": "sha256:14eb444da82e2dfcb1175a684a4978f036994adb7a71a7240317f8ec2a4757a1",
       "counts": {
-        "00000": 2001,
-        "11111": 1999
+        "00000": 2008,
+        "11111": 1992
       },
-      "created_at": "2026-07-11T20:04:18+00:00",
+      "created_at": "2026-07-11T21:33:32+00:00",
       "shots": 4000
+    },
+    "vqe/q_test_vqe_ansatz.py::optimized_ansatz": {
+      "backend": "aer",
+      "circuit_hash": "sha256:55bfa6b5c865324240b2f350d175374ca619c8ac71e490b993d6c25135a9c808",
+      "counts": {
+        "00": 2559,
+        "01": 444,
+        "10": 403,
+        "11": 2594
+      },
+      "created_at": "2026-07-11T21:33:32+00:00",
+      "shots": 6000
     }
   }
 }
