@@ -172,6 +172,21 @@ Four ideas nobody else has packaged:
   Qontinuum on itself.
 - **Releases**: tag → GitHub Actions → PyPI via trusted publishing (no secrets).
 
+## v0.2: the full toolchain
+
+Version 0.2 grew the surface from 10 commands to **110**, organized git-style
+(`qont <noun> <verb>`), all documented in the
+[command reference](https://xtanishkx.github.io/quantum/docs/commands/). The
+headline additions, each a DevOps prevalent-practice translated to quantum:
+**`qont lint`** (ruff-style rules for quantum-test footguns, including a static
+statistical-soundness check), **`qont noise headroom`** (load testing: the noise
+scale where your test breaks), **`qont history bisect`** (git-bisect over run
+history), **`qont budget`** (FinOps caps enforced pre-submission),
+**`qont test --cached`** (content-addressed simulation caching), **`qont fuzz`**
+(empirical flakiness rates), **`qont pack`** (verifiable reproducibility
+bundles), **`qont shots plan`** (suite-wide shot-count audits), and
+**`qont report junit`** (native rendering in any CI system).
+
 ## Where it's going
 
 The OSS core is the wedge. The platform roadmap: a hosted dashboard ("the cloud") that

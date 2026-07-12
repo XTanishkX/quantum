@@ -15,14 +15,32 @@ from qontinuum.runner.engine import run_suite
 
 app = typer.Typer(
     name="qontinuum",
-    help="CI/CD, noise-aware regression testing, and cost intelligence for quantum programs.",
+    help="The quantum DevOps toolchain: statistical testing, cost intelligence, "
+    "hardware routing, spend guards, and observability for quantum programs.",
     no_args_is_help=True,
-    add_completion=False,
+    add_completion=True,
 )
 snapshot_app = typer.Typer(help="Manage golden-baseline snapshots.", no_args_is_help=True)
-app.add_typer(snapshot_app, name="snapshot")
+app.add_typer(snapshot_app, name="snapshot", rich_help_panel="State, history & spend")
 
 console = Console()
+
+
+def _version_callback(value: bool) -> None:
+    if value:
+        console.print(qontinuum.__version__)
+        raise typer.Exit()
+
+
+@app.callback()
+def _main(
+    version_flag: Annotated[
+        bool,
+        typer.Option("--version", callback=_version_callback, is_eager=True,
+                     help="Print the qontinuum version and exit."),
+    ] = False,
+) -> None:
+    """qont — ship quantum code like software."""
 
 _STYLE = {Status.PASS: "green", Status.FAIL: "red", Status.ERROR: "yellow"}
 _MARK = {Status.PASS: "✓", Status.FAIL: "✗", Status.ERROR: "!"}
@@ -49,9 +67,16 @@ def test(
         Path | None, typer.Option("--json", help="Write the suite result as JSON.")
     ] = None,
     history: HistoryOpt = True,
+    cached: Annotated[
+        bool,
+        typer.Option("--cached", help="Reuse cached results for unchanged seeded circuits."),
+    ] = False,
 ) -> None:
     """Discover and run quantum tests (files matching q_test_*.py)."""
-    suite = _run(path, seed=seed, update_snapshots=False)
+    if cached and seed is None:
+        console.print("[red]--cached needs --seed (unseeded runs are random on purpose)[/red]")
+        raise typer.Exit(2)
+    suite = _run(path, seed=seed, update_snapshots=False, use_cache=cached)
     if json_out:
         json_out.write_text(suite.model_dump_json(indent=2))
         console.print(f"[dim]wrote {json_out}[/dim]")
@@ -257,6 +282,10 @@ def run(
 
     console.print(f"[dim]ran on {adapter.target}; estimated cost ${estimated:,.2f}[/dim]")
     _print_suite(suite)
+    if suite.tests:
+        from qontinuum.budget import record_spend
+
+        record_spend(path, usd=estimated, target=adapter.target, tests=len(suite.tests))
     if history and suite.tests:
         append_history(path, suite, cheapest_usd=estimated)
     raise typer.Exit(_exit_code(suite))
@@ -345,11 +374,13 @@ def version() -> None:
     console.print(qontinuum.__version__)
 
 
-def _run(path: Path, *, seed: int | None, update_snapshots: bool) -> SuiteResult:
+def _run(
+    path: Path, *, seed: int | None, update_snapshots: bool, use_cache: bool = False
+) -> SuiteResult:
     if not path.exists():
         console.print(f"[red]path not found:[/red] {path}")
         raise typer.Exit(2)
-    suite = run_suite(path, seed=seed, update_snapshots=update_snapshots)
+    suite = run_suite(path, seed=seed, update_snapshots=update_snapshots, use_cache=use_cache)
     _print_suite(suite)
     return suite
 
@@ -384,8 +415,106 @@ def _exit_code(suite: SuiteResult) -> int:
     return 0
 
 
+@snapshot_app.command("list")
+def snapshot_list(
+    path: PathArg = Path("."),
+    json_mode: Annotated[bool, typer.Option("--json")] = False,
+) -> None:
+    """List recorded golden baselines."""
+    from qontinuum.cli_util import emit
+    from qontinuum.runner.snapshots import SnapshotStore
+
+    store = SnapshotStore(path if path.is_dir() else path.parent)
+    rows = [
+        {"test": test_id, "backend": s["backend"], "shots": s["shots"],
+         "hash": s["circuit_hash"][:23] + "…", "created_at": s["created_at"]}
+        for test_id, s in sorted(store._data["snapshots"].items())
+    ]
+    emit(rows, json_mode=json_mode, title="snapshots",
+         columns=[("test", "Test"), ("backend", "Backend"), ("shots", "Shots"),
+                  ("hash", "Circuit hash"), ("created_at", "Recorded")],
+         right_align={"shots"})
+
+
+@snapshot_app.command("show")
+def snapshot_show(
+    test_id: Annotated[str, typer.Argument(help="Test id from `snapshot list`.")],
+    path: PathArg = Path("."),
+    json_mode: Annotated[bool, typer.Option("--json")] = False,
+) -> None:
+    """Full stored baseline for one test, including counts."""
+    import json as _json
+
+    from qontinuum.cli_util import emit_object, fail
+    from qontinuum.runner.snapshots import SnapshotStore
+
+    snap = SnapshotStore(path if path.is_dir() else path.parent).get(test_id)
+    if snap is None:
+        fail(f"no snapshot for {test_id!r}; run `qont snapshot list`")
+    if json_mode:
+        print(_json.dumps(snap, indent=2))
+        return
+    emit_object({k: v for k, v in snap.items() if k != "counts"},
+                json_mode=False, title=test_id)
+    top = sorted(snap["counts"].items(), key=lambda kv: -kv[1])[:8]
+    emit_object({f"P({k})": round(v / snap["shots"], 4) for k, v in top}, json_mode=False)
+
+
+@snapshot_app.command("rm")
+def snapshot_rm(
+    test_id: Annotated[str, typer.Argument()],
+    path: PathArg = Path("."),
+) -> None:
+    """Delete one baseline."""
+    from qontinuum.cli_util import fail
+    from qontinuum.runner.snapshots import SnapshotStore
+
+    store = SnapshotStore(path if path.is_dir() else path.parent)
+    if store.get(test_id) is None:
+        fail(f"no snapshot for {test_id!r}")
+    del store._data["snapshots"][test_id]
+    store.save()
+    console.print(f"[green]removed[/green] snapshot for {test_id}")
+
+
+@snapshot_app.command("prune")
+def snapshot_prune(path: PathArg = Path(".")) -> None:
+    """Drop baselines whose tests no longer exist."""
+    from qontinuum.runner.discovery import discover
+    from qontinuum.runner.snapshots import SnapshotStore
+
+    store = SnapshotStore(path if path.is_dir() else path.parent)
+    live = {item.id for item in discover(path)}
+    stale = [tid for tid in store._data["snapshots"] if tid not in live]
+    for tid in stale:
+        del store._data["snapshots"][tid]
+    if stale:
+        store.save()
+        for tid in stale:
+            console.print(f"[green]pruned[/green] {tid}")
+    else:
+        console.print("[dim]no stale snapshots[/dim]")
+
+
+@snapshot_app.command("verify")
+def snapshot_verify(path: PathArg = Path("."), seed: SeedOpt = None) -> None:
+    """Re-run snapshot tests and report drift without CI semantics."""
+    suite = run_suite(path, seed=seed)
+    checked = [t for t in suite.tests
+               if any(c.name == "snapshot" for c in t.checks)]
+    if not checked:
+        console.print("[yellow]no snapshot-enabled tests found[/yellow]")
+        raise typer.Exit(2)
+    _print_suite(suite)
+
+
 def main() -> None:  # pragma: no cover
     app()
+
+
+from qontinuum import cli_groups as _cli_groups  # noqa: E402  (after app exists)
+
+_cli_groups.register(app)
 
 
 if __name__ == "__main__":  # pragma: no cover

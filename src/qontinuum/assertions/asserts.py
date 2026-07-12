@@ -53,6 +53,10 @@ def assert_distribution(
     counts = _counts_of(result)
     expected = stats.validate_expected(expected)
     shots = sum(counts.values())
+    value = stats.tvd(counts, expected)
+    # Recorded before the soundness gate so linting and dashboards see the
+    # threshold even for tests that are statistically unsound as configured.
+    record("tvd", value, tvd_threshold)
     floor = stats.sampling_floor(len(expected), shots, confidence)
     if tvd_threshold < floor:
         needed = stats.shots_for_threshold(len(expected), tvd_threshold, confidence)
@@ -62,8 +66,6 @@ def assert_distribution(
             f"~{100 * (1 - confidence):.0f}% of the time. Use at least {needed} shots "
             f"or raise the threshold to >= {floor:.4g}."
         )
-    value = stats.tvd(counts, expected)
-    record("tvd", value, tvd_threshold)
     if value > tvd_threshold:
         top = sorted(counts.items(), key=lambda kv: -kv[1])[:4]
         observed = ", ".join(f"{k}: {v / shots:.3f}" for k, v in top)
