@@ -9,6 +9,8 @@
 
 🌐 **[Website](https://xtanishkx.github.io/quantum/)** · 📊 **[Live demo dashboard](https://xtanishkx.github.io/quantum/demo/dashboard.html)** · 📖 **[Explainer](EXPLAINER.md)**
 
+<p align="center"><img src="docs/assets/qont-test.svg" alt="qont test and qont cost terminal demo" width="760"></p>
+
 Quantum programs don't return values — they return probability distributions sampled from
 noisy hardware. `assert result == expected` doesn't work, and nothing in the classical CI
 toolchain knows that. Qontinuum does.
@@ -179,7 +181,7 @@ jobs:
 ```
 
 Every PR gets one sticky comment (updated in place) with pass/fail per check and the
-hardware cost table.
+hardware cost table — [see a live one on PR #1](https://github.com/XTanishkX/quantum/pull/1).
 
 ## Assertions
 
