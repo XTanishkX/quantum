@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Qontinuum — CI/CD, testing & cost intelligence for quantum programs</title>
+<meta name="description" content="pytest + Infracost + Datadog for quantum computing. Statistical regression testing, multi-provider cost estimates on every PR, noise-aware CI, and spend-guarded hardware runs.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚛️</text></svg>">
+<style>
+  :root{
+    --bg:#07090f; --bg2:#0b0e17; --panel:#10141f; --line:#1d2333;
+    --text:#e8ecf4; --dim:#8b94a7; --cyan:#22d3ee; --violet:#a78bfa;
+    --green:#34d399; --red:#f87171; --amber:#fbbf24;
+    --mono:'SF Mono',ui-monospace,'Cascadia Code',Menlo,Consolas,monospace;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{background:var(--bg);color:var(--text);font-family:-apple-system,'Segoe UI',Roboto,Inter,sans-serif;overflow-x:hidden;line-height:1.6}
+  a{color:var(--cyan);text-decoration:none}
+  section{position:relative;padding:7rem 1.5rem}
+  .wrap{max-width:1080px;margin:0 auto;position:relative;z-index:2}
+  h1{font-size:clamp(2.4rem,6vw,4.6rem);line-height:1.06;font-weight:800;letter-spacing:-.03em}
+  h2{font-size:clamp(1.7rem,3.6vw,2.6rem);font-weight:750;letter-spacing:-.02em;margin-bottom:1rem}
+  .grad{background:linear-gradient(92deg,var(--cyan),var(--violet));-webkit-background-clip:text;background-clip:text;color:transparent}
+  .kicker{font-family:var(--mono);font-size:.8rem;letter-spacing:.18em;text-transform:uppercase;color:var(--cyan);margin-bottom:1rem}
+  .sub{color:var(--dim);font-size:clamp(1rem,1.6vw,1.25rem);max-width:46rem}
+
+  /* nav */
+  nav{position:fixed;top:0;left:0;right:0;z-index:50;display:flex;justify-content:space-between;align-items:center;
+      padding:.9rem 1.6rem;background:rgba(7,9,15,.72);backdrop-filter:blur(14px);border-bottom:1px solid var(--line)}
+  nav .logo{font-weight:800;font-size:1.05rem;color:var(--text)}
+  nav .logo span{color:var(--cyan)}
+  nav .links{display:flex;gap:1.4rem;align-items:center;font-size:.92rem}
+  nav .links a{color:var(--dim)} nav .links a:hover{color:var(--text)}
+  .btn{display:inline-flex;align-items:center;gap:.5rem;padding:.65rem 1.25rem;border-radius:10px;font-weight:650;font-size:.95rem;
+       border:1px solid var(--line);color:var(--text);transition:transform .15s,border-color .15s;cursor:pointer}
+  .btn:hover{transform:translateY(-2px);border-color:var(--cyan)}
+  .btn.primary{background:linear-gradient(92deg,#0891b2,#7c3aed);border:none}
+  .btn.small{padding:.45rem .9rem;font-size:.85rem}
+
+  /* hero */
+  #hero{min-height:100vh;display:flex;align-items:center;padding-top:5rem}
+  #bloch{position:absolute;inset:0;width:100%;height:100%;z-index:1;opacity:.95}
+  .install{display:inline-flex;align-items:center;gap:.9rem;margin-top:2.2rem;background:var(--panel);
+           border:1px solid var(--line);border-radius:12px;padding:.9rem 1.2rem;font-family:var(--mono);font-size:1rem}
+  .install .prompt{color:var(--green)}
+  .install button{background:none;border:1px solid var(--line);color:var(--dim);border-radius:8px;padding:.3rem .7rem;cursor:pointer;font-family:var(--mono)}
+  .install button:hover{color:var(--cyan);border-color:var(--cyan)}
+  .hero-ctas{margin-top:1.6rem;display:flex;gap:.9rem;flex-wrap:wrap}
+  .stat-strip{display:flex;gap:2.6rem;margin-top:3.2rem;flex-wrap:wrap}
+  .stat .n{font-family:var(--mono);font-size:1.7rem;font-weight:700;color:var(--cyan)}
+  .stat .l{color:var(--dim);font-size:.85rem}
+
+  /* terminal */
+  .term{background:#0a0d15;border:1px solid var(--line);border-radius:14px;overflow:hidden;box-shadow:0 24px 70px rgba(0,0,0,.5)}
+  .term .bar{display:flex;gap:.45rem;padding:.7rem .9rem;border-bottom:1px solid var(--line)}
+  .term .bar i{width:11px;height:11px;border-radius:50%;display:block}
+  .term .bar i:nth-child(1){background:#ff5f57}.term .bar i:nth-child(2){background:#febc2e}.term .bar i:nth-child(3){background:#28c840}
+  .term .bar em{margin-left:.8rem;font-style:normal;color:var(--dim);font-family:var(--mono);font-size:.75rem;align-self:center}
+  .term pre{padding:1.1rem 1.3rem;font-family:var(--mono);font-size:.86rem;line-height:1.65;overflow-x:auto}
+  .term .tline{display:block;opacity:0;transform:translateY(6px)}
+  .g{color:var(--green)}.r{color:var(--red)}.d{color:var(--dim)}.c{color:var(--cyan)}.v{color:var(--violet)}.y{color:var(--amber)}
+
+  /* split layout */
+  .split{display:grid;grid-template-columns:1fr 1.15fr;gap:3.5rem;align-items:center}
+  @media(max-width:880px){.split{grid-template-columns:1fr}}
+
+  /* histogram demo */
+  .hist{display:flex;gap:2.4rem;margin-top:2rem;flex-wrap:wrap}
+  .hist .run{flex:1;min-width:210px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:1.1rem}
+  .hist .run h4{font-family:var(--mono);font-size:.78rem;color:var(--dim);font-weight:500;margin-bottom:.9rem}
+  .bars{display:flex;align-items:flex-end;gap:.7rem;height:120px}
+  .bgroup{flex:1;display:flex;flex-direction:column;align-items:center;gap:.4rem;height:100%;justify-content:flex-end}
+  .bar-fill{width:100%;border-radius:6px 6px 0 0;background:linear-gradient(180deg,var(--cyan),#0e7490)}
+  .bgroup em{font-family:var(--mono);font-style:normal;font-size:.75rem;color:var(--dim)}
+  .bgroup .pct{font-size:.72rem;color:var(--cyan);font-family:var(--mono)}
+
+  /* cost table */
+  .cost-table{width:100%;border-collapse:collapse;font-family:var(--mono);font-size:.9rem;margin-top:1.6rem}
+  .cost-table th{color:var(--dim);font-weight:500;text-align:left;padding:.55rem .8rem;border-bottom:1px solid var(--line);font-size:.78rem;letter-spacing:.06em}
+  .cost-table td{padding:.6rem .8rem;border-bottom:1px solid rgba(29,35,51,.6)}
+  .cost-table td:last-child,.cost-table th:last-child{text-align:right}
+  .price{color:var(--green);font-weight:700}
+  .price.hot{color:var(--red)}
+  .spread{font-size:clamp(2.2rem,5vw,3.6rem);font-weight:800;font-family:var(--mono);margin-top:1.4rem}
+  .spread .x{color:var(--red)}
+
+  /* cards */
+  .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:1.2rem;margin-top:2.6rem}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:1.5rem;transition:border-color .2s,transform .2s}
+  .card:hover{border-color:var(--violet);transform:translateY(-4px)}
+  .card .ico{font-size:1.6rem}
+  .card h3{margin:.7rem 0 .45rem;font-size:1.05rem}
+  .card p{color:var(--dim);font-size:.9rem}
+
+  /* PR comment mock */
+  .pr{background:var(--panel);border:1px solid var(--line);border-radius:14px;overflow:hidden;font-size:.9rem}
+  .pr .head{display:flex;gap:.7rem;align-items:center;padding:.85rem 1.1rem;border-bottom:1px solid var(--line);background:#0d1119}
+  .pr .avatar{width:26px;height:26px;border-radius:50%;background:linear-gradient(135deg,var(--cyan),var(--violet));display:grid;place-items:center;font-size:.8rem}
+  .pr .head b{font-size:.88rem}.pr .head span{color:var(--dim);font-size:.78rem}
+  .pr .body{padding:1.1rem 1.3rem}
+  .pr .body h4{margin-bottom:.6rem}
+  .pr table{width:100%;border-collapse:collapse;font-size:.82rem;margin-top:.6rem}
+  .pr th,.pr td{border:1px solid var(--line);padding:.4rem .6rem;text-align:left}
+  .pr th{color:var(--dim);font-weight:600}
+
+  /* route bars */
+  .routes{margin-top:1.8rem;display:flex;flex-direction:column;gap:.8rem}
+  .route-row{display:grid;grid-template-columns:9.5rem 1fr 5.5rem;gap:1rem;align-items:center;font-family:var(--mono);font-size:.84rem}
+  .route-row .name{color:var(--dim);text-align:right}
+  .route-bar{height:22px;border-radius:6px;background:linear-gradient(90deg,var(--violet),var(--cyan));transform-origin:left;width:var(--w)}
+  .route-row .val{color:var(--cyan)}
+
+  footer{border-top:1px solid var(--line);padding:3rem 1.5rem;color:var(--dim);font-size:.9rem}
+  footer .wrap{display:flex;justify-content:space-between;flex-wrap:wrap;gap:1rem}
+
+  .floaty{position:absolute;border-radius:50%;filter:blur(90px);opacity:.16;z-index:0;pointer-events:none}
+  .f1{width:480px;height:480px;background:var(--violet);top:-120px;right:-120px}
+  .f2{width:420px;height:420px;background:var(--cyan);bottom:-150px;left:-140px}
+
+  @media (prefers-reduced-motion: reduce){
+    *{animation:none!important;transition:none!important}
+    .tline{opacity:1!important;transform:none!important}
+  }
+  @media (max-width:720px){
+    nav .links a:not(.btn){display:none}
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="logo">⚛️ Q<span>ontinuum</span></div>
+  <div class="links">
+    <a href="#test">Testing</a><a href="#cost">Cost</a><a href="#route">Routing</a>
+    <a href="#observe">Observability</a>
+    <a href="demo/dashboard.html">Live demo</a>
+    <a class="btn small" href="https://github.com/XTanishkX/quantum">GitHub</a>
+    <a class="btn small primary" href="https://pypi.org/project/qontinuum/">PyPI</a>
+  </div>
+</nav>
+
+<!-- ============ HERO ============ -->
+<section id="hero">
+  <canvas id="bloch"></canvas>
+  <div class="wrap">
+    <div class="kicker" id="hero-kick">quantum devops · open source · apache-2.0</div>
+    <h1 id="hero-h1">Ship quantum code<br><span class="grad">like software.</span></h1>
+    <p class="sub" id="hero-sub">Quantum programs return probability distributions, not values — and the same job
+      costs <b>$6 on one vendor, $961 on another</b>. Qontinuum is the missing delivery pipeline:
+      statistical regression testing, cost intelligence on every PR, noise-aware CI, and
+      spend-guarded hardware runs.</p>
+    <div class="install" id="hero-install">
+      <span><span class="prompt">$</span> pip install qontinuum</span>
+      <button onclick="navigator.clipboard.writeText('pip install qontinuum');this.textContent='copied!'">copy</button>
+    </div>
+    <div class="hero-ctas" id="hero-ctas">
+      <a class="btn primary" href="https://github.com/XTanishkX/quantum">Star on GitHub</a>
+      <a class="btn" href="demo/dashboard.html">See a live dashboard →</a>
+    </div>
+    <div class="stat-strip" id="hero-stats">
+      <div class="stat"><div class="n" data-count="9">0</div><div class="l">CLI commands</div></div>
+      <div class="stat"><div class="n" data-count="9">0</div><div class="l">priced devices</div></div>
+      <div class="stat"><div class="n" data-count="138">0</div><div class="l">tests behind it</div></div>
+      <div class="stat"><div class="n" data-count="0">$0</div><div class="l">to run your whole CI</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ PROBLEM ============ -->
+<section id="problem" style="background:var(--bg2)">
+  <div class="floaty f1"></div>
+  <div class="wrap">
+    <div class="kicker">the problem</div>
+    <h2><span class="mono" style="font-family:var(--mono)">assert result == expected</span><br>doesn't work here.</h2>
+    <p class="sub">Run a <em>perfect</em> Bell pair twice at 4,000 shots. You get two different answers —
+      both correct. Every classical test runner calls that a failure. Regression testing quantum
+      programs is a statistics problem, and your toolchain doesn't speak statistics.</p>
+    <div class="hist">
+      <div class="run"><h4>run #1 — same circuit</h4>
+        <div class="bars">
+          <div class="bgroup"><span class="pct">50.3%</span><div class="bar-fill hb" data-h="100"></div><em>00</em></div>
+          <div class="bgroup"><span class="pct">0.1%</span><div class="bar-fill hb" data-h="3"></div><em>01</em></div>
+          <div class="bgroup"><span class="pct">0.2%</span><div class="bar-fill hb" data-h="4"></div><em>10</em></div>
+          <div class="bgroup"><span class="pct">49.4%</span><div class="bar-fill hb" data-h="97"></div><em>11</em></div>
+        </div>
+      </div>
+      <div class="run"><h4>run #2 — same circuit</h4>
+        <div class="bars">
+          <div class="bgroup"><span class="pct">49.1%</span><div class="bar-fill hb" data-h="96"></div><em>00</em></div>
+          <div class="bgroup"><span class="pct">0.2%</span><div class="bar-fill hb" data-h="4"></div><em>01</em></div>
+          <div class="bgroup"><span class="pct">0.1%</span><div class="bar-fill hb" data-h="3"></div><em>10</em></div>
+          <div class="bgroup"><span class="pct">50.6%</span><div class="bar-fill hb" data-h="100"></div><em>11</em></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ TESTING ============ -->
+<section id="test">
+  <div class="wrap split">
+    <div>
+      <div class="kicker">01 · statistical testing</div>
+      <h2>pytest, but it speaks <span class="grad">distributions.</span></h2>
+      <p class="sub">Decorate a circuit factory, attach checks. Assertions are statistical tests —
+        total variation distance, chi-squared, fidelity, two-sample snapshot baselines — and every
+        one is <b>shots-aware</b>: if your threshold is below the sampling noise floor, Qontinuum
+        refuses to run a test that would be flaky by construction, and tells you the shot count
+        that fixes it.</p>
+    </div>
+    <div class="term" data-term>
+      <div class="bar"><i></i><i></i><i></i><em>qont test</em></div>
+      <pre><span class="tline"><span class="d">$</span> <span class="c">qont test</span></span><span class="tline"><span class="g">✓</span> <b>q_test_bell.py::bell_pair</b>  <span class="d">aer, 4000 shots, 30 ms</span></span><span class="tline">    <span class="g">✓ is_maximally_entangled</span>  <span class="d">TVD 0.011 &lt; 0.05</span></span><span class="tline">    <span class="g">✓ no_odd_parity_leakage</span></span><span class="tline"><span class="g">✓</span> <b>q_test_ghz.py::ghz_5</b>  <span class="d">aer, 4000 shots</span></span><span class="tline">    <span class="g">✓ snapshot</span>  <span class="d">two-sample p = 0.44</span></span><span class="tline"><span class="y">!</span> <b>q_test_deep.py::qaoa_layer</b></span><span class="tline">    <span class="y">! tvd_threshold=0.01 is below the sampling noise floor 0.0289</span></span><span class="tline">      <span class="d">at 4000 shots. Use ≥ 33380 shots or threshold ≥ 0.0289.</span></span><span class="tline"> </span><span class="tline"><b>2 passed, 0 failed, 1 statistically unsound</b></span></pre>
+    </div>
+  </div>
+</section>
+
+<!-- ============ NOISE ============ -->
+<section style="background:var(--bg2)">
+  <div class="floaty f2"></div>
+  <div class="wrap split">
+    <div class="term" data-term>
+      <div class="bar"><i></i><i></i><i></i><em>noise-aware CI — no account, no network</em></div>
+      <pre><span class="tline"><span class="v">@qtest</span>(shots=4000, backend=<span class="g">"ibm:manila"</span>)   <span class="d"># real calibration snapshot</span></span><span class="tline"><span class="v">def</span> <span class="c">bell_under_noise</span>():</span><span class="tline">    ...</span><span class="tline"> </span><span class="tline"><span class="v">@qtest</span>(shots=4000, backend=<span class="g">"ibm:brisbane@live"</span>) <span class="d"># today's noise</span></span><span class="tline"><span class="v">def</span> <span class="c">bell_today</span>():</span><span class="tline">    ...</span><span class="tline"> </span><span class="tline"><span class="g">✓ survives_real_calibration_noise</span>  <span class="d">TVD 0.041 &lt; 0.2 under ibm:manila</span></span></pre>
+    </div>
+    <div>
+      <div class="kicker">02 · noise-aware ci</div>
+      <h2>Test against <span class="grad">real hardware noise.</span> Offline. Free.</h2>
+      <p class="sub">IBM publishes per-device calibration data — gate errors, readout errors, T1/T2.
+        Qontinuum turns it into local noise models, so every push answers <em>"does my circuit
+        still survive realistic noise?"</em> without accounts, queues, or bills. Live calibration
+        is one <span style="font-family:var(--mono)">@live</span> suffix away.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ COST ============ -->
+<section id="cost">
+  <div class="wrap">
+    <div class="kicker">03 · cost intelligence</div>
+    <h2>Same job. <span class="spread-inline grad">100× price spread.</span></h2>
+    <p class="sub">Providers price by shots, by seconds, by gate-shots, by credits. Qontinuum encodes every
+      model in a verified, source-linked catalog and prices your whole suite before you spend a cent.</p>
+    <div class="spread"><span class="money" data-to="6">$0</span> <span class="d" style="color:var(--dim)">vs</span> <span class="money x" data-to="961">$0</span></div>
+    <p class="d" style="color:var(--dim);font-family:var(--mono);font-size:.85rem">the identical 12,000-shot suite, cheapest vs priciest device</p>
+    <table class="cost-table">
+      <thead><tr><th>PROVIDER</th><th>DEVICE</th><th>MODEL</th><th>EST. COST</th></tr></thead>
+      <tbody>
+        <tr><td>AWS Braket</td><td>Rigetti Cepheus</td><td class="d">per-shot</td><td class="price">$6.00</td></tr>
+        <tr><td>IBM Quantum</td><td>Heron (PAYG)</td><td class="d">per-second</td><td class="price">$9.61</td></tr>
+        <tr><td>AWS Braket</td><td>IQM Garnet</td><td class="d">per-shot</td><td class="price">$18.30</td></tr>
+        <tr><td>Azure Quantum</td><td>IonQ Aria 1</td><td class="d">gate-shot formula</td><td class="price">$63.29</td></tr>
+        <tr><td>AWS Braket</td><td>IonQ Forte</td><td class="d">per-shot</td><td class="price hot">$960.90</td></tr>
+        <tr><td>Azure Quantum</td><td>Quantinuum H2</td><td class="d">HQC credits</td><td class="price" style="color:var(--violet)">137.4 HQC</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ============ PR COMMENT ============ -->
+<section style="background:var(--bg2)">
+  <div class="wrap split">
+    <div>
+      <div class="kicker">04 · the github action</div>
+      <h2>Cost review becomes <span class="grad">code review.</span></h2>
+      <p class="sub">One sticky comment per PR, updated in place: every statistical check with its
+        actual statistic, and what the suite would cost on real hardware. Like Infracost did for
+        Terraform — a 100× price decision stops hiding in the invoice.</p>
+      <div class="install" style="margin-top:1.6rem"><span><span class="d">- uses:</span> XTanishkX/quantum/action@main</span></div>
+    </div>
+    <div class="pr" id="pr-card">
+      <div class="head"><div class="avatar">⚛️</div><b>github-actions</b><span>bot · commented 12 seconds ago</span></div>
+      <div class="body">
+        <h4>⚛️ Qontinuum report</h4>
+        <p>✅ <b>5 passed · 0 failed · 0 errors</b> <span class="d">(5 tests, 20,000 shots, seed 42)</span></p>
+        <h4 style="margin-top:1rem">💸 Running this suite on real hardware</h4>
+        <table>
+          <tr><th>Provider</th><th>Device</th><th>Est. cost</th></tr>
+          <tr><td>AWS Braket</td><td>Rigetti Cepheus</td><td class="g">$10.00</td></tr>
+          <tr><td>IBM Quantum</td><td>Heron (PAYG)</td><td class="g">$16.01</td></tr>
+          <tr><td>AWS Braket</td><td>IonQ Forte</td><td class="r">$1,601.50</td></tr>
+        </table>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ ROUTING + GUARD ============ -->
+<section id="route">
+  <div class="wrap split">
+    <div>
+      <div class="kicker">05 · hardware routing &amp; the spend guard</div>
+      <h2>Pick hardware <span class="grad">rationally.</span> Spend <span class="grad">deliberately.</span></h2>
+      <p class="sub"><b>qont route</b> ranks devices by estimated success probability × price —
+        cheap-but-noisy vs pricey-but-clean, resolved with one number. And when you do run on real
+        QPUs, <b>qont run</b> prices the <em>entire</em> suite before the first shot is submitted.
+        The default budget is $0: spending is always an explicit decision.</p>
+      <div class="routes">
+        <div class="route-row"><span class="name">Rigetti Cepheus</span><div class="route-bar" style="--w:96%"></div><span class="val">$14.08</span></div>
+        <div class="route-row"><span class="name">IBM Heron</span><div class="route-bar" style="--w:79%"></div><span class="val">$17.17</span></div>
+        <div class="route-row"><span class="name">IQM Garnet</span><div class="route-bar" style="--w:39%"></div><span class="val">$34.74</span></div>
+        <div class="route-row"><span class="name">IonQ Aria</span><div class="route-bar" style="--w:12%"></div><span class="val">$112.10</span></div>
+      </div>
+      <p class="d" style="color:var(--dim);font-size:.8rem;font-family:var(--mono);margin-top:.8rem">$ per successful shot batch — lower is better</p>
+    </div>
+    <div class="term" data-term>
+      <div class="bar"><i></i><i></i><i></i><em>qont run — the $0-default spend guard</em></div>
+      <pre><span class="tline"><span class="d">$</span> <span class="c">qont run --on braket:rigetti_cepheus</span></span><span class="tline"><span class="r">spend guard:</span> estimated cost <b>$10.00</b> exceeds the --max-cost</span><span class="tline">budget <b>$0.00</b>; <b>nothing was submitted</b>.</span><span class="tline"><span class="d">Re-run with --max-cost 10.00 or higher to proceed.</span></span><span class="tline"> </span><span class="tline"><span class="d">$</span> <span class="c">qont run --on braket:rigetti_cepheus --max-cost 12</span></span><span class="tline"><span class="d">ran on braket:rigetti_cepheus; estimated cost $10.00</span></span><span class="tline"><span class="g">✓</span> <b>bell_pair</b>  <span class="d">hw:braket:rigetti_cepheus, 4000 shots</span></span><span class="tline">    <span class="g">✓ is_maximally_entangled</span>  <span class="d">TVD 0.078 &lt; 0.2</span></span></pre>
+    </div>
+  </div>
+</section>
+
+<!-- ============ OBSERVABILITY ============ -->
+<section id="observe" style="background:var(--bg2)">
+  <div class="wrap">
+    <div class="kicker">06 · observability</div>
+    <h2>Watch your suite <span class="grad">drift.</span></h2>
+    <p class="sub">Every run appends to a local history. <b>qont dashboard</b> renders it as a single
+      self-contained HTML file — status timeline, every check's statistic trending against its
+      threshold, cost per run. No server, no JS dependencies. Statistics are captured even on
+      <em>passing</em> runs, so healthy suites chart too.</p>
+    <div class="hero-ctas" style="margin-top:2rem">
+      <a class="btn primary" href="demo/dashboard.html">Open the live demo dashboard →</a>
+    </div>
+    <div class="cards">
+      <div class="card"><div class="ico">🧮</div><h3>Soundness floor</h3><p>Assertions refuse thresholds that shot noise can't resolve — flaky-by-construction tests are config errors, not failures.</p></div>
+      <div class="card"><div class="ico">🔐</div><h3>Content-addressed circuits</h3><p>Canonical hashing ignores register names & formatting. <span style="font-family:var(--mono)">qont diff</span> shows only semantic changes.</p></div>
+      <div class="card"><div class="ico">📸</div><h3>Quantum snapshots</h3><p>Golden baselines compared with two-sample tests; circuit changes flag the snapshot stale — exactly like Jest.</p></div>
+      <div class="card"><div class="ico">🔌</div><h3>Bring your SDK</h3><p>Qiskit, QASM 2/3, Cirq circuits, PennyLane tapes — one loader, one runner, one report.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ GET STARTED ============ -->
+<section id="start">
+  <div class="wrap" style="text-align:center">
+    <div class="kicker">get started</div>
+    <h2>Your first quantum test is <span class="grad">12 lines away.</span></h2>
+    <div class="term" style="max-width:640px;margin:2.4rem auto 0;text-align:left" data-term>
+      <div class="bar"><i></i><i></i><i></i><em>q_test_bell.py</em></div>
+      <pre><span class="tline"><span class="v">from</span> qiskit <span class="v">import</span> QuantumCircuit</span><span class="tline"><span class="v">from</span> qontinuum <span class="v">import</span> qtest, assert_distribution</span><span class="tline"> </span><span class="tline"><span class="v">@qtest</span>(shots=<span class="c">4000</span>)</span><span class="tline"><span class="v">def</span> <span class="c">bell_pair</span>():</span><span class="tline">    qc = QuantumCircuit(<span class="c">2</span>)</span><span class="tline">    qc.h(<span class="c">0</span>); qc.cx(<span class="c">0</span>, <span class="c">1</span>); qc.measure_all()</span><span class="tline">    <span class="v">return</span> qc</span><span class="tline"> </span><span class="tline"><span class="v">@bell_pair.check</span></span><span class="tline"><span class="v">def</span> <span class="c">is_entangled</span>(result):</span><span class="tline">    assert_distribution(result, {<span class="g">"00"</span>: .5, <span class="g">"11"</span>: .5}, tvd_threshold=<span class="c">0.05</span>)</span></pre>
+    </div>
+    <div class="hero-ctas" style="justify-content:center;margin-top:2.2rem">
+      <a class="btn primary" href="https://pypi.org/project/qontinuum/">pip install qontinuum</a>
+      <a class="btn" href="https://github.com/XTanishkX/quantum">Read the docs on GitHub</a>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div>⚛️ <b>Qontinuum</b> · Apache-2.0 · built from home, for everyone shipping quantum code</div>
+    <div>
+      <a href="https://github.com/XTanishkX/quantum">GitHub</a> ·
+      <a href="https://pypi.org/project/qontinuum/">PyPI</a> ·
+      <a href="https://github.com/XTanishkX/quantum/blob/main/EXPLAINER.md">Explainer</a> ·
+      <a href="demo/dashboard.html">Demo dashboard</a>
+    </div>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js"></script>
+<script>
+/* ---------- 3D Bloch sphere hero (hand-rolled projection, no three.js) ---------- */
+(function(){
+  const canvas = document.getElementById('bloch');
+  const ctx = canvas.getContext('2d');
+  let W, H, dpr = Math.min(window.devicePixelRatio || 1, 2);
+  function resize(){
+    W = canvas.clientWidth; H = canvas.clientHeight;
+    canvas.width = W * dpr; canvas.height = H * dpr;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  }
+  resize(); addEventListener('resize', resize);
+
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  // two entangled spheres: rings of points + a state-vector arrow each
+  function ringPoints(n, lat){
+    const pts = [];
+    for (let i = 0; i < n; i++){
+      const lon = i / n * Math.PI * 2;
+      pts.push([Math.cos(lat) * Math.cos(lon), Math.sin(lat), Math.cos(lat) * Math.sin(lon)]);
+    }
+    return pts;
+  }
+  let spherePts = [];
+  for (const lat of [-1.1, -.65, -.22, .22, .65, 1.1]) spherePts = spherePts.concat(ringPoints(26, lat));
+  for (let i = 0; i < 20; i++){ // meridian
+    const t = i / 20 * Math.PI * 2;
+    spherePts.push([Math.cos(t), Math.sin(t), 0]);
+  }
+
+  const scroll = { rot: 0 };
+  let t0 = 0;
+  function project(p, rotY, rotX, cx, cy, R){
+    let [x, y, z] = p;
+    let x1 = x * Math.cos(rotY) - z * Math.sin(rotY);
+    let z1 = x * Math.sin(rotY) + z * Math.cos(rotY);
+    let y1 = y * Math.cos(rotX) - z1 * Math.sin(rotX);
+    let z2 = y * Math.sin(rotX) + z1 * Math.cos(rotX);
+    const persp = 2.6 / (2.6 + z2);
+    return [cx + x1 * R * persp, cy + y1 * R * persp, z2, persp];
+  }
+  function drawSphere(cx, cy, R, rotY, rotX, hueA, hueB, vec){
+    for (const p of spherePts){
+      const [sx, sy, z, persp] = project(p, rotY, rotX, cx, cy, R);
+      const a = .12 + .4 * (1 - (z + 1) / 2);
+      ctx.beginPath();
+      ctx.arc(sx, sy, 1.4 * persp, 0, 7);
+      ctx.fillStyle = `hsla(${z > 0 ? hueA : hueB}, 90%, 70%, ${a})`;
+      ctx.fill();
+    }
+    // state vector
+    const [vx, vy] = project(vec, rotY, rotX, cx, cy, R);
+    const grad = ctx.createLinearGradient(cx, cy, vx, vy);
+    grad.addColorStop(0, 'rgba(34,211,238,.9)'); grad.addColorStop(1, 'rgba(167,139,250,.9)');
+    ctx.strokeStyle = grad; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(vx, vy); ctx.stroke();
+    ctx.beginPath(); ctx.arc(vx, vy, 3.5, 0, 7); ctx.fillStyle = '#a78bfa'; ctx.fill();
+    return [vx, vy];
+  }
+  function render(){
+    const t = (performance.now() - t0) / 1000;
+    ctx.clearRect(0, 0, W, H);
+    const R = Math.min(W, H) * .21;
+    const cxA = W * .74, cyA = H * .38, cxB = W * .88, cyB = H * .78;
+    const rot = t * .25 + scroll.rot;
+    const th = t * .7;
+    const vecA = [Math.sin(th) * Math.cos(t * .4), Math.cos(th), Math.sin(th) * Math.sin(t * .4)];
+    const vecB = [-vecA[0], -vecA[1], -vecA[2]]; // anti-correlated: entanglement
+    const a = drawSphere(cxA, cyA, R, rot, .35, 190, 260, vecA);
+    const b = drawSphere(cxB, cyB, R * .55, -rot * 1.2, .5, 260, 190, vecB);
+    // entanglement link
+    ctx.beginPath(); ctx.moveTo(a[0], a[1]);
+    const mx = (a[0] + b[0]) / 2 + Math.sin(t * 2) * 18, my = (a[1] + b[1]) / 2 + Math.cos(t * 1.6) * 14;
+    ctx.quadraticCurveTo(mx, my, b[0], b[1]);
+    ctx.strokeStyle = `rgba(167,139,250,${.25 + .15 * Math.sin(t * 3)})`;
+    ctx.setLineDash([4, 7]); ctx.lineWidth = 1.2; ctx.stroke(); ctx.setLineDash([]);
+  }
+  t0 = performance.now();
+  if (reduced){
+    render(); // one static frame
+  } else if (window.gsap){
+    gsap.ticker.add(render); // one scheduler for canvas + tweens (see watchdog below)
+    gsap.to(scroll, {
+      rot: 2.4, ease: 'none',
+      scrollTrigger: { trigger: '#hero', start: 'top top', end: 'bottom top', scrub: true }
+    });
+  } else {
+    (function loop(){ render(); requestAnimationFrame(loop); })();
+  }
+})();
+
+/* rAF can be throttled — even to zero — in embedded webviews and
+   battery-saver tabs, which freezes GSAP's ticker (it only ticks on rAF).
+   Continuous watchdog: whenever the ticker hasn't advanced since the last
+   check, tick it manually. A healthy 60fps page makes this a no-op. */
+(function(){
+  if (!window.gsap) return;
+  var last = -1;
+  setInterval(function(){
+    if (gsap.ticker.time === last) gsap.ticker.tick();
+    last = gsap.ticker.time;
+  }, 120);
+})();
+
+/* ---------- GSAP scroll animations ---------- */
+if (window.gsap && !matchMedia('(prefers-reduced-motion: reduce)').matches){
+  gsap.registerPlugin(ScrollTrigger);
+
+  // hero entrance
+  gsap.timeline()
+    .from('#hero-kick',   {y: 18, opacity: 0, duration: .55})
+    .from('#hero-h1',     {y: 34, opacity: 0, duration: .8, ease: 'power3.out'}, '-=.25')
+    .from('#hero-sub',    {y: 24, opacity: 0, duration: .6}, '-=.45')
+    .from('#hero-install',{y: 18, opacity: 0, duration: .5}, '-=.3')
+    .from('#hero-ctas',   {y: 14, opacity: 0, duration: .5}, '-=.3')
+    .from('#hero-stats',  {y: 14, opacity: 0, duration: .5}, '-=.3');
+
+  // count-up stats
+  document.querySelectorAll('#hero-stats .n').forEach(el => {
+    const target = +el.dataset.count;
+    const obj = { v: 0 };
+    const isMoney = el.textContent.trim().startsWith('$');
+    gsap.to(obj, {
+      v: target, duration: 1.6, delay: .9, ease: 'power2.out',
+      onUpdate: () => el.textContent = isMoney ? '$' + Math.round(obj.v) : Math.round(obj.v)
+    });
+  });
+
+  // section headers + subs fade in
+  document.querySelectorAll('section .kicker, section h2, section .sub').forEach(el => {
+    gsap.from(el, {
+      y: 26, opacity: 0, duration: .7, ease: 'power2.out',
+      scrollTrigger: { trigger: el, start: 'top 86%' }
+    });
+  });
+
+  // terminals: type lines in (generous trigger so short viewports still fire it)
+  document.querySelectorAll('[data-term]').forEach(term => {
+    gsap.to(term.querySelectorAll('.tline'), {
+      opacity: 1, y: 0, duration: .3, stagger: .14, ease: 'power1.out',
+      scrollTrigger: { trigger: term, start: 'top 95%' }
+    });
+  });
+
+  // histogram bars grow
+  document.querySelectorAll('.hb').forEach(bar => {
+    gsap.fromTo(bar, {height: 0}, {
+      height: bar.dataset.h + '%', duration: 1, ease: 'elastic.out(1, .6)',
+      scrollTrigger: { trigger: bar, start: 'top 88%' }
+    });
+  });
+
+  // money counters
+  document.querySelectorAll('.money').forEach(el => {
+    const obj = { v: 0 }, to = +el.dataset.to;
+    gsap.to(obj, {
+      v: to, duration: 1.8, ease: 'power3.out',
+      onUpdate: () => el.textContent = '$' + Math.round(obj.v).toLocaleString(),
+      scrollTrigger: { trigger: el, start: 'top 85%' }
+    });
+  });
+
+  // cost table rows
+  gsap.from('.cost-table tbody tr', {
+    x: -28, opacity: 0, stagger: .09, duration: .5,
+    scrollTrigger: { trigger: '.cost-table', start: 'top 82%' }
+  });
+
+  // PR card pop
+  gsap.from('#pr-card', {
+    y: 44, opacity: 0, rotateX: 8, transformPerspective: 700, duration: .9, ease: 'power3.out',
+    scrollTrigger: { trigger: '#pr-card', start: 'top 82%' }
+  });
+
+  // route bars scale in
+  document.querySelectorAll('.route-bar').forEach(bar => {
+    gsap.from(bar, {
+      scaleX: 0, duration: 1, ease: 'power3.out',
+      scrollTrigger: { trigger: bar, start: 'top 88%' }
+    });
+  });
+
+  // feature cards stagger
+  gsap.from('.cards .card', {
+    y: 34, opacity: 0, stagger: .1, duration: .6,
+    scrollTrigger: { trigger: '.cards', start: 'top 84%' }
+  });
+}
+</script>
+</body>
+</html>
