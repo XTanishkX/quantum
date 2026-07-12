@@ -4,8 +4,8 @@ build-backend = "hatchling.build"
 
 [project]
 name = "qontinuum"
-version = "0.1.0"
-description = "CI/CD, noise-aware regression testing, and cost intelligence for quantum programs"
+version = "0.2.0"
+description = "The quantum DevOps toolchain: statistical testing, cost intelligence, hardware routing, spend guards, and observability for quantum programs"
 readme = "README.md"
 license = "Apache-2.0"
 license-files = ["LICENSE"]
@@ -46,7 +46,8 @@ dependencies = [
 [project.optional-dependencies]
 ibm = ["qiskit-ibm-runtime>=0.30"]
 braket = ["amazon-braket-sdk>=1.80", "qiskit-braket-provider>=0.4"]
-dev = ["pytest>=8.0", "pytest-cov>=5.0", "ruff>=0.6"]
+dev = ["pytest>=8.0", "pytest-cov>=5.0", "ruff>=0.6", "mypy>=1.10"]
+docs = ["mkdocs-material>=9.5"]
 
 [project.scripts]
 qontinuum = "qontinuum.cli:app"
@@ -74,3 +75,21 @@ filterwarnings = [
     # qiskit-ibm-runtime plugin machinery, not our code
     "ignore:.*IBMFractionalTranslationPlugin.*:DeprecationWarning",
 ]
+
+[tool.coverage.run]
+source = ["src/qontinuum"]
+omit = [
+    # network/hardware paths exercised only with real accounts
+    "src/qontinuum/hardware/ibm.py",
+    "src/qontinuum/hardware/braket.py",
+    # interactive long-runners
+    "src/qontinuum/cli_groups/misc_cmds.py",
+]
+
+[tool.mypy]
+python_version = "3.12"
+ignore_missing_imports = true
+warn_unused_ignores = false
+# pragmatic gate: catch real breakage without fighting untyped SDK decorators
+disable_error_code = ["union-attr", "arg-type", "assignment", "var-annotated", "misc"]
+exclude = "tests/"

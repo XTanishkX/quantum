@@ -1,0 +1,45 @@
+site_name: Qontinuum
+site_description: The quantum DevOps toolchain — statistical testing, cost intelligence, hardware routing, spend guards, and observability for quantum programs.
+site_url: https://xtanishkx.github.io/quantum/docs/
+repo_url: https://github.com/XTanishkX/quantum
+repo_name: XTanishkX/quantum
+edit_uri: edit/main/docs/
+
+theme:
+  name: material
+  palette:
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: deep purple
+      accent: cyan
+      toggle: {icon: material/weather-sunny, name: Light mode}
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: deep purple
+      accent: cyan
+      toggle: {icon: material/weather-night, name: Dark mode}
+  features:
+    - navigation.sections
+    - navigation.top
+    - content.code.copy
+    - search.suggest
+  icon:
+    repo: fontawesome/brands/github
+
+markdown_extensions:
+  - admonition
+  - tables
+  - pymdownx.highlight
+  - pymdownx.superfences
+  - toc:
+      permalink: true
+
+nav:
+  - Home: index.md
+  - Getting started: getting-started.md
+  - Command reference: commands.md
+  - Concepts:
+      - The statistics: statistics.md
+      - Cost models: cost-models.md
+      - Backends & noise: backends.md
+  - Launch notes: launch-notes.md
