@@ -7,7 +7,7 @@
 
 **CI/CD, noise-aware regression testing, and cost intelligence for quantum programs.**
 
-🌐 **[Website](https://xtanishkx.github.io/quantum/)** · 📊 **[Live demo dashboard](https://xtanishkx.github.io/quantum/demo/dashboard.html)** · 📖 **[Explainer](EXPLAINER.md)**
+🌐 **[Website](https://xtanishkx.github.io/quantum/)** · 📚 **[Docs](https://xtanishkx.github.io/quantum/docs/)** · 📊 **[Live demo dashboard](https://xtanishkx.github.io/quantum/demo/dashboard.html)** · 📖 **[Explainer](EXPLAINER.md)**
 
 <p align="center"><img src="docs/assets/qont-test.svg" alt="qont test and qont cost terminal demo" width="760"></p>
 
@@ -33,6 +33,22 @@ toolchain knows that. Qontinuum does.
 - **Noise-aware testing** — simulate against real IBM device calibration data, offline,
   for free.
 - **Bring your own SDK** — `load_circuit` also accepts Cirq circuits and PennyLane tapes.
+
+…and that's just the core. **v0.2 is a full toolchain — [110 commands](https://xtanishkx.github.io/quantum/docs/commands/)** translating the DevOps stack to quantum:
+
+| | |
+|---|---|
+| `qont lint` | **ruff for quantum tests** — 9 rules incl. the statistical soundness floor (Q001) |
+| `qont noise headroom` | **load-testing for quantum** — how much calibration drift survives your test? |
+| `qont history bisect` | **git-bisect for physics** — which run first crossed the threshold? |
+| `qont budget` | **QPU FinOps** — monthly/total caps enforced *before* submission |
+| `qont test --cached` | **build caching for simulation** — content-addressed seeded results |
+| `qont fuzz` | **flakiness hunting** — empirical pass rates with Wilson intervals |
+| `qont pack` | **reproducibility bundles** — `verify` re-runs and two-sample-compares |
+| `qont shots plan` | **shot-count audits** — the napkin statistics, mechanized |
+| `qont report junit` | quantum checks rendered natively in Jenkins/GitLab/Buildkite |
+| `qont explain` | failure forensics: which outcomes drove the statistic, and why |
+| + `circuit` `device` `registry` `stats` `bench` `watch` `config` `env` `doctor` `init` `mock` `schedule` … | the full plumbing |
 
 
 ## Install
