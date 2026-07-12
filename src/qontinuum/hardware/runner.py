@@ -68,6 +68,12 @@ def run_suite_on_hardware(
             f"--max-cost budget ${max_cost:,.2f}; nothing was submitted. "
             f"Re-run with --max-cost {estimated:,.2f} or higher to proceed."
         )
+    from qontinuum.budget import BudgetExceededError, check_budget
+
+    try:
+        check_budget(root if root.is_dir() else root.parent, estimated)
+    except BudgetExceededError as exc:
+        raise SpendGuardError(str(exc)) from None
 
     suite = SuiteResult(tool_version=qontinuum.__version__)
     if dry_run:

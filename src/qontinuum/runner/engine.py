@@ -24,8 +24,13 @@ def run_suite(
     seed: int | None = None,
     snapshot_alpha: float = 0.01,
     update_snapshots: bool = False,
+    use_cache: bool = False,
 ) -> SuiteResult:
-    """Run every discovered quantum test under ``root``."""
+    """Run every discovered quantum test under ``root``.
+
+    With ``use_cache`` and a seed, unchanged circuits reuse counts from the
+    content-addressed result cache instead of re-simulating.
+    """
     store = SnapshotStore(root if root.is_dir() else root.parent)
     suite = SuiteResult(tool_version=qontinuum.__version__, seed=seed)
     for item in discover(root):
@@ -36,6 +41,7 @@ def run_suite(
                 store=store,
                 snapshot_alpha=snapshot_alpha,
                 update_snapshots=update_snapshots,
+                cache_root=root if (use_cache and seed is not None) else None,
             )
         )
     if update_snapshots:
@@ -50,16 +56,18 @@ def _run_test(
     store: SnapshotStore,
     snapshot_alpha: float,
     update_snapshots: bool,
+    cache_root: Path | None = None,
 ) -> TestResult:
     test = item.test
     result = TestResult(id=item.id, status=Status.PASS, backend=test.backend, shots=test.shots)
     try:
         circuit = test.build()
-        run = execute(circuit, shots=test.shots, backend_spec=test.backend, seed=seed)
+        run = _execute_maybe_cached(item, circuit, seed=seed, cache_root=cache_root)
     except Exception as exc:
         result.status = Status.ERROR
         result.error = f"{type(exc).__name__}: {exc}"
         return result
+    result.cached = bool(run.metadata.get("cached"))
 
     result.circuit_hash = run.circuit_hash
     result.counts = run.counts
@@ -85,6 +93,28 @@ def _run_test(
     elif Status.FAIL in statuses:
         result.status = Status.FAIL
     return result
+
+
+def _execute_maybe_cached(item: DiscoveredTest, circuit, *, seed, cache_root):
+    """Execute, or serve counts from the result cache for seeded runs."""
+    if cache_root is None:
+        return execute(circuit, shots=item.test.shots, backend_spec=item.test.backend, seed=seed)
+
+    from qontinuum import cache
+    from qontinuum.circuits import circuit_hash
+    from qontinuum.runner.result import RunResult
+
+    digest = circuit_hash(circuit)
+    key = cache.cache_key(digest, item.test.backend, item.test.shots, seed)
+    counts = cache.get(cache_root, key)
+    if counts is not None:
+        return RunResult(
+            counts=counts, shots=item.test.shots, backend=item.test.backend,
+            circuit_hash=digest, seed=seed, duration_ms=0.0, metadata={"cached": True},
+        )
+    run = execute(circuit, shots=item.test.shots, backend_spec=item.test.backend, seed=seed)
+    cache.put(cache_root, key, run.counts, meta={"test": item.id})
+    return run
 
 
 def _evaluate(name: str, thunk) -> CheckResult:

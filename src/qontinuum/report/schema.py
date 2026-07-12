@@ -38,6 +38,7 @@ class TestResult(BaseModel):
     checks: list[CheckResult] = Field(default_factory=list)
     duration_ms: float = 0.0
     error: str = ""
+    cached: bool = False  # counts served from the result cache (seeded runs)
 
 
 class SuiteResult(BaseModel):
