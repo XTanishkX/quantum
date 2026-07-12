@@ -1,6 +1,13 @@
 # Qontinuum
 
+[![PyPI](https://img.shields.io/pypi/v/qontinuum)](https://pypi.org/project/qontinuum/)
+[![CI](https://github.com/XTanishkX/quantum/actions/workflows/ci.yml/badge.svg)](https://github.com/XTanishkX/quantum/actions/workflows/ci.yml)
+[![Python](https://img.shields.io/pypi/pyversions/qontinuum)](https://pypi.org/project/qontinuum/)
+[![License](https://img.shields.io/badge/license-Apache--2.0-blue)](LICENSE)
+
 **CI/CD, noise-aware regression testing, and cost intelligence for quantum programs.**
+
+🌐 **[Website](https://xtanishkx.github.io/quantum/)** · 📊 **[Live demo dashboard](https://xtanishkx.github.io/quantum/demo/dashboard.html)** · 📖 **[Explainer](EXPLAINER.md)**
 
 Quantum programs don't return values — they return probability distributions sampled from
 noisy hardware. `assert result == expected` doesn't work, and nothing in the classical CI
@@ -25,7 +32,6 @@ toolchain knows that. Qontinuum does.
   for free.
 - **Bring your own SDK** — `load_circuit` also accepts Cirq circuits and PennyLane tapes.
 
-> Status: pre-release (v0.1 in development).
 
 ## Install
 
