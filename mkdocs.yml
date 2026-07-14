@@ -42,4 +42,7 @@ nav:
       - The statistics: statistics.md
       - Cost models: cost-models.md
       - Backends & noise: backends.md
+      - Execution intelligence: execution-intelligence.md
+  - Extending:
+      - Plugins (providers, backends, SDKs): plugins.md
   - Launch notes: launch-notes.md

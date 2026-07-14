@@ -24,15 +24,21 @@ class BackendSpecError(ValueError):
 
 
 def resolve_backend(spec: str) -> AerSimulator:
-    if spec == "aer":
-        return AerSimulator()
-    if spec.startswith("ibm:"):
-        from qontinuum.noise import noisy_simulator
+    """Build a simulator from a backend spec via the plugin registry.
 
-        return noisy_simulator(spec.removeprefix("ibm:"))
-    raise BackendSpecError(
-        f"unknown backend spec {spec!r}; expected 'aer' or 'ibm:<device>'"
-    )
+    The token before the first ``:`` selects the backend plugin (``aer`` or
+    ``ibm`` built in); the remainder is passed to it (e.g. ``fake_manila`` for
+    ``ibm:fake_manila``). Third-party backend plugins resolve identically.
+    """
+    from qontinuum.plugins import get_registry
+
+    name, _, arg = spec.partition(":")
+    record = get_registry().get("backend", name)
+    if record is None or not record.available:
+        raise BackendSpecError(
+            f"unknown backend spec {spec!r}; expected 'aer' or 'ibm:<device>'"
+        )
+    return record.plugin.build(arg)
 
 
 def execute(

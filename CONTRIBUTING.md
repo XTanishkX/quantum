@@ -31,6 +31,8 @@ against `examples/` (we eat our own cooking — quantum tests + cost comment).
 | `src/qontinuum/cost` | pricing catalog (`catalog.yaml`), circuit profiling, estimator |
 | `src/qontinuum/router` | device scoring: success probability × cost, ranking strategies |
 | `src/qontinuum/hardware` | real-QPU adapters (IBM, Braket) behind the all-or-nothing spend guard |
+| `src/qontinuum/plugins` | plugin protocols + registry; the built-in providers/backends/SDKs |
+| `src/qontinuum/intelligence` | execution intelligence: provider health, recommendation engine, planner, analytics (pure, provider-agnostic) |
 | `src/qontinuum/report` | versioned JSON schema, markdown renderer, run history, HTML dashboard |
 | `action/` | the composite GitHub Action |
 
@@ -45,3 +47,8 @@ against `examples/` (we eat our own cooking — quantum tests + cost comment).
   guard: it must refuse configurations that would be flaky by construction.
 - **Offline by default.** Tests and CI must run without accounts or network; anything
   live (e.g. `@live` calibration) is opt-in.
+- **The edges are plugins, the IR is Qiskit.** New providers, simulator backends, and
+  source SDKs are added as plugins in the `qontinuum.{providers,backends,sdks}`
+  entry-point groups — in-tree via `plugins/builtins.py`, or shipped as a separate
+  package. Core code speaks one IR (`QuantumCircuit`); don't add SDK-specific branches
+  to the runner. See [`docs/plugins.md`](docs/plugins.md).

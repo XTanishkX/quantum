@@ -91,25 +91,32 @@ def show(
 
 @app.command("stats")
 def stats_cmd(path: PathOpt = Path("."), json_mode: JsonOpt = False) -> None:
-    """Aggregate history: pass rate, flakiest test, shots and spend totals."""
+    """Aggregate history: pass rate, flakiest test, provider usage, spend."""
+    from qontinuum.intelligence import summarize_executions
+
     records = _records(path)
-    passes = sum(1 for r in records if r["status"] == "pass")
     fail_counts: dict[str, int] = {}
     for record in records:
         for test in record.get("tests", []):
             if test["status"] != "pass":
                 fail_counts[test["id"]] = fail_counts.get(test["id"], 0) + 1
     flakiest = max(fail_counts.items(), key=lambda kv: kv[1], default=None)
-    spend = [r["cheapest_usd"] for r in records if r.get("cheapest_usd") is not None]
+
+    analytics = summarize_executions(records)
     emit_object(
         {
-            "runs": len(records),
-            "pass_rate": f"{passes / len(records):.1%}",
+            # original keys preserved for backwards compatibility
+            "runs": analytics["runs"],
+            "pass_rate": analytics.get("suite_pass_rate"),
             "first_run": records[0]["created_at"],
             "last_run": records[-1]["created_at"],
             "total_shots": sum(r.get("total_shots", 0) for r in records),
             "most_failing_test": f"{flakiest[0]} ({flakiest[1]}x)" if flakiest else None,
-            "cheapest_hw_estimates_sum": round(sum(spend), 2) if spend else None,
+            "cheapest_hw_estimates_sum": analytics.get("estimated_spend_usd"),
+            # v0.4.0 execution analytics
+            "hardware_runs": analytics.get("hardware_runs"),
+            "hardware_success_rate": analytics.get("hardware_success_rate"),
+            "providers_used": analytics.get("providers_used"),
         },
         json_mode=json_mode,
         title="history stats",

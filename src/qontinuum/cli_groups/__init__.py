@@ -9,6 +9,7 @@ PANEL_CIRCUITS = "Circuits"
 PANEL_ANALYSIS = "Analysis & quality"
 PANEL_STATE = "State, history & spend"
 PANEL_HARDWARE = "Hardware & providers"
+PANEL_INTEL = "Execution intelligence"
 PANEL_REPORTS = "Reports"
 PANEL_CORE = "Core workflow"
 
@@ -22,10 +23,12 @@ def register(app: typer.Typer) -> None:
         config_cmds,
         device_cmds,
         history_cmds,
+        intel_cmds,
         lint_cmds,
         misc_cmds,
         noise_cmds,
         pack_cmds,
+        plugin_cmds,
         providers_cmds,
         registry_cmds,
         report_cmds,
@@ -42,6 +45,7 @@ def register(app: typer.Typer) -> None:
     app.add_typer(circuit_cmds.app, name="circuit", rich_help_panel=PANEL_CIRCUITS)
     app.add_typer(device_cmds.app, name="device", rich_help_panel=PANEL_HARDWARE)
     app.add_typer(providers_cmds.app, name="providers", rich_help_panel=PANEL_HARDWARE)
+    app.add_typer(plugin_cmds.app, name="plugin", rich_help_panel=PANEL_HARDWARE)
     app.add_typer(history_cmds.app, name="history", rich_help_panel=PANEL_STATE)
     app.add_typer(budget_cmds.app, name="budget", rich_help_panel=PANEL_STATE)
     app.add_typer(cache_cmds.app, name="cache", rich_help_panel=PANEL_STATE)
@@ -53,4 +57,5 @@ def register(app: typer.Typer) -> None:
     app.add_typer(bench_cmds.app, name="bench", rich_help_panel=PANEL_ANALYSIS)
     app.add_typer(lint_cmds.app, name="lint", rich_help_panel=PANEL_ANALYSIS)
     app.add_typer(report_cmds.app, name="report", rich_help_panel=PANEL_REPORTS)
+    intel_cmds.register_flat(app)
     misc_cmds.register_flat(app)
