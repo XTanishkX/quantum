@@ -37,6 +37,26 @@ local run history — into explainable recommendations and plans.
 - **`qont plan`** — a pre-execution plan with estimates, risks, and fallbacks.
 - **`qont health`** — the provider-health table.
 
+### Added — execution history database (schema 2)
+
+- **Versioned, forward-compatible history DB.** `.qontinuum/history.jsonl`
+  records are now schema 2 and readers **migrate older lines up on read**, so
+  files from any prior version stay readable and new fields never break old
+  consumers. Migration only adds defaults.
+- **Structured `execution` records** on hardware runs — provider, target,
+  estimated/actual cost, queue time, runtime, routing strategy, calibration age,
+  and outcome. Every field beyond `mode` is optional and extensible, designed as
+  the ingestion format a future hosted platform consumes without a redesign.
+- **Analytics core** gains `provider_comparison` (per-target runs, success rate,
+  average duration) and `routing_decisions` (the recorded execution log).
+
+### Added — dashboard trends
+
+- **`qont dashboard`** now visualizes hardware **cost over time**, **provider
+  usage** bars, a **provider comparison** table (success rate + average
+  duration), and hardware success-rate tiles — all still a single
+  self-contained HTML file with no external assets.
+
 ### Changed
 
 - **`qont history stats`** gains execution analytics (hardware run count,

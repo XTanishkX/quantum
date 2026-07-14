@@ -1,9 +1,15 @@
-"""Append-only run history (.qontinuum/history.jsonl).
+"""Append-only run history (.qontinuum/history.jsonl) — the local execution DB.
 
-One JSON line per suite run — the local observability substrate that
-``qont dashboard`` renders and a future hosted dashboard would ingest.
-Measurement counts are deliberately excluded (bulk); circuit hashes and check
-statistics are what trend analysis needs.
+One JSON line per suite run: the local observability substrate that
+``qont dashboard`` renders, ``qont history`` mines, and a future hosted platform
+would ingest. Measurement counts are deliberately excluded (bulk); circuit
+hashes, check statistics, and — since schema 2 — a structured ``execution``
+record (provider, cost, runtime, outcome) are what trend analysis needs.
+
+The record schema is **versioned and forward-compatible**: readers migrate older
+lines up on read (:func:`migrate_record`), so a file written by any prior
+version stays readable, and new optional fields never break old consumers. This
+is what a later cloud sync ingests without a redesign.
 """
 
 from __future__ import annotations
@@ -13,10 +19,36 @@ import os
 import subprocess
 from pathlib import Path
 
+from pydantic import BaseModel
+
 from qontinuum.report.schema import SuiteResult
 
-HISTORY_SCHEMA = 1
+HISTORY_SCHEMA = 2
 HISTORY_FILE = "history.jsonl"
+
+
+class ExecutionRecord(BaseModel):
+    """Structured metadata about *where and how* a suite ran (schema 2+).
+
+    Every field beyond ``mode`` is optional and defaults to ``None`` — offline
+    simulator runs fill almost none of it, a hardware run fills what it knows,
+    and a future scheduler/cloud layer can populate the rest (actual cost, queue
+    time) without a schema change.
+    """
+
+    mode: str  # "hardware" | "simulator"
+    provider: str | None = None
+    target: str | None = None
+    backend: str | None = None
+    estimated_cost_usd: float | None = None
+    actual_cost_usd: float | None = None
+    queue_time_s: float | None = None
+    runtime_s: float | None = None
+    routing_strategy: str | None = None
+    calibration_age_days: int | None = None
+    outcome: str | None = None  # suite status at execution time
+    submitted_at: str | None = None
+    completed_at: str | None = None
 
 
 def history_path(root: Path) -> Path:
@@ -25,8 +57,14 @@ def history_path(root: Path) -> Path:
 
 
 def append_history(
-    root: Path, suite: SuiteResult, *, cheapest_usd: float | None = None
+    root: Path,
+    suite: SuiteResult,
+    *,
+    cheapest_usd: float | None = None,
+    execution: ExecutionRecord | dict | None = None,
 ) -> Path:
+    if isinstance(execution, ExecutionRecord):
+        execution = execution.model_dump()
     record = {
         "schema": HISTORY_SCHEMA,
         "created_at": suite.created_at.isoformat(timespec="seconds"),
@@ -37,6 +75,7 @@ def append_history(
         "tally": suite.tally(),
         "total_shots": sum(t.shots for t in suite.tests),
         "cheapest_usd": cheapest_usd,
+        "execution": execution,
         "tests": [
             {
                 "id": t.id,
@@ -65,6 +104,22 @@ def append_history(
     return path
 
 
+def migrate_record(record: dict) -> dict:
+    """Upgrade a history record to the current schema, in place-safe fashion.
+
+    Old (schema 1) lines lack the ``execution`` field; we add it as ``None`` so
+    every consumer sees one consistent shape. Migration only ever *adds*
+    defaults — it never drops or reinterprets data — so it is safe to run on
+    every read and to persist (``qont history prune`` rewrites migrated lines).
+    """
+    if record.get("schema", 1) >= HISTORY_SCHEMA and "execution" in record:
+        return record
+    upgraded = dict(record)
+    upgraded["schema"] = HISTORY_SCHEMA
+    upgraded.setdefault("execution", None)
+    return upgraded
+
+
 def read_history(root: Path) -> list[dict]:
     path = history_path(root)
     if not path.is_file():
@@ -73,7 +128,7 @@ def read_history(root: Path) -> list[dict]:
     for line in path.read_text().splitlines():
         line = line.strip()
         if line:
-            records.append(json.loads(line))
+            records.append(migrate_record(json.loads(line)))
     return records
 
 

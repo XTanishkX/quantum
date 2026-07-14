@@ -38,6 +38,50 @@ def provider_usage(records: list[dict]) -> dict[str, int]:
     return dict(sorted(usage.items(), key=lambda kv: -kv[1]))
 
 
+def provider_comparison(records: list[dict]) -> list[dict]:
+    """Per-target reliability table: runs, success rate, and average duration."""
+    agg: dict[str, dict] = defaultdict(lambda: {"runs": 0, "passes": 0, "dur": []})
+    for test in _hardware_runs(records):
+        bucket = agg[test["target"]]
+        bucket["runs"] += 1
+        if test["status"] == "pass":
+            bucket["passes"] += 1
+        if isinstance(test.get("duration_ms"), (int, float)):
+            bucket["dur"].append(test["duration_ms"])
+    rows = [
+        {
+            "target": target,
+            "runs": bucket["runs"],
+            "success_rate": round(bucket["passes"] / bucket["runs"], 4),
+            "avg_duration_ms": _avg(bucket["dur"]),
+        }
+        for target, bucket in agg.items()
+    ]
+    return sorted(rows, key=lambda r: -r["runs"])
+
+
+def routing_decisions(records: list[dict]) -> list[dict]:
+    """Recorded execution decisions (schema 2+): what ran where, and how it went."""
+    out = []
+    for record in records:
+        execution = record.get("execution")
+        if not execution or execution.get("mode") != "hardware":
+            continue
+        out.append(
+            {
+                "at": record["created_at"],
+                "target": execution.get("target"),
+                "provider": execution.get("provider"),
+                "strategy": execution.get("routing_strategy"),
+                "estimated_cost_usd": execution.get("estimated_cost_usd"),
+                "actual_cost_usd": execution.get("actual_cost_usd"),
+                "runtime_s": execution.get("runtime_s"),
+                "outcome": execution.get("outcome"),
+            }
+        )
+    return out
+
+
 def cost_series(records: list[dict]) -> list[dict]:
     """Time series of the cheapest per-run hardware estimate, for trend charts."""
     return [

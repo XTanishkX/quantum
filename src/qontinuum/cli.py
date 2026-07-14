@@ -287,7 +287,20 @@ def run(
 
         record_spend(path, usd=estimated, target=adapter.target, tests=len(suite.tests))
     if history and suite.tests:
-        append_history(path, suite, cheapest_usd=estimated)
+        from qontinuum.report.history import ExecutionRecord
+
+        provider_key = getattr(adapter, "catalog_device", (None, None))[0]
+        runtime_s = round(sum(t.duration_ms for t in suite.tests) / 1000, 3)
+        execution = ExecutionRecord(
+            mode="hardware",
+            provider=provider_key,
+            target=adapter.target,
+            backend=f"hw:{adapter.target}",
+            estimated_cost_usd=estimated,
+            runtime_s=runtime_s,
+            outcome=suite.status.value,
+        )
+        append_history(path, suite, cheapest_usd=estimated, execution=execution)
     raise typer.Exit(_exit_code(suite))
 
 

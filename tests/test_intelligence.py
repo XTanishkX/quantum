@@ -201,6 +201,32 @@ class TestAnalytics:
         assert summary["hardware_success_rate"] == "75.0%"
         assert summary["estimated_spend_usd"] == pytest.approx(2.0)
 
+    def test_provider_comparison(self):
+        from qontinuum.intelligence import provider_comparison
+
+        records = hw_history("braket:ionq_forte", ["pass", "pass", "fail", "pass"])
+        (row,) = provider_comparison(records)
+        assert row["target"] == "braket:ionq_forte"
+        assert row["runs"] == 4
+        assert row["success_rate"] == pytest.approx(0.75)
+        assert row["avg_duration_ms"] == pytest.approx(1200.0)
+
+    def test_routing_decisions_from_execution_records(self):
+        from qontinuum.intelligence import routing_decisions
+
+        records = [
+            {"created_at": "2026-07-12T00:00:00", "status": "pass",
+             "execution": {"mode": "hardware", "target": "braket:ionq_forte",
+                           "routing_strategy": "fidelity", "outcome": "pass"},
+             "tests": []},
+            {"created_at": "2026-07-12T00:00:00", "status": "pass",
+             "execution": None, "tests": []},  # simulator run: ignored
+        ]
+        decisions = routing_decisions(records)
+        assert len(decisions) == 1
+        assert decisions[0]["strategy"] == "fidelity"
+        assert decisions[0]["target"] == "braket:ionq_forte"
+
 
 # --------------------------------------------------------------------------- #
 # CLI

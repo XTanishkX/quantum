@@ -43,6 +43,7 @@ nav:
       - Cost models: cost-models.md
       - Backends & noise: backends.md
       - Execution intelligence: execution-intelligence.md
+      - Observability & history DB: observability.md
   - Extending:
       - Plugins (providers, backends, SDKs): plugins.md
   - Launch notes: launch-notes.md
