@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "qontinuum"
-version = "0.2.0"
+version = "0.3.0"
 description = "The quantum DevOps toolchain: statistical testing, cost intelligence, hardware routing, spend guards, and observability for quantum programs"
 readme = "README.md"
 license = "Apache-2.0"

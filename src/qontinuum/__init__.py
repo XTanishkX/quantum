@@ -1,6 +1,6 @@
 """Qontinuum: CI/CD, noise-aware regression testing, and cost intelligence for quantum programs."""
 
-__version__ = "0.1.0"
+__version__ = "0.3.0"
 
 from qontinuum.assertions import (
     QuantumAssertionError,

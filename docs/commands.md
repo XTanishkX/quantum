@@ -1,6 +1,6 @@
 # Command reference
 
-All 110 commands. Every read command accepts `--json`; exit codes are `0` ok, `1` failures/findings, `2` usage/config, `3` guard refusal.
+All 116 commands. Every read command accepts `--json`; exit codes are `0` ok, `1` failures/findings, `2` usage/config, `3` guard refusal.
 
 ## Core & flat commands
 
@@ -15,12 +15,18 @@ All 110 commands. Every read command accepts `--json`; exit codes are `0` ok, `1
 | `qont explain` | Failure forensics: which outcomes drove a failing check, and why. |
 | `qont fuzz` | Flakiness hunter: rerun the suite under a seed sweep, estimate pass rates. |
 | `qont hash` | Print a circuit's canonical content hash. |
+| `qont health` | Provider health: per-device reliability from calibration and local history. |
 | `qont init` | Scaffold a Qontinuum project: example test, config, gitignore entries. |
 | `qont mock` | Generate synthetic measurement counts (test fixtures, demos, docs). |
+| `qont plan` | Produce a concrete execution plan: device, estimates, risks, fallbacks. |
+| `qont recommend` | Rank hardware for the discovered workload and explain the top choice. |
 | `qont route` | Recommend which hardware should run the discovered tests. |
 | `qont run` | Run the discovered tests on REAL hardware, guarded by a spend cap. |
 | `qont test` | Discover and run quantum tests (files matching q_test_*.py). |
 | `qont version` | Print the qontinuum version. |
+
+See [Execution intelligence](execution-intelligence.md) for `recommend`, `plan`,
+and `health`.
 
 ## `qont bench`
 
@@ -168,6 +174,17 @@ Pricing-catalog provenance.
 |---|---|
 | `qont providers list` | Providers, device counts, verification date, and sources. |
 | `qont providers verify` | Check that every catalog source URL is still reachable (network). |
+
+## `qont plugin`
+
+Discover and diagnose provider, backend, and SDK plugins. See
+[Extending Qontinuum](plugins.md).
+
+| Command | What it does |
+|---|---|
+| `qont plugin list` | Every discovered plugin: name, kind, source, availability. |
+| `qont plugin show` | Full detail for one plugin (disambiguate with `--kind`). |
+| `qont plugin doctor` | Plugin health: what loaded, what needs an extra, what's broken. |
 
 ## `qont registry`
 

@@ -34,7 +34,7 @@ toolchain knows that. Qontinuum does.
   for free.
 - **Bring your own SDK** — `load_circuit` also accepts Cirq circuits and PennyLane tapes.
 
-…and that's just the core. **v0.2 is a full toolchain — [110 commands](https://xtanishkx.github.io/quantum/docs/commands/)** translating the DevOps stack to quantum:
+…and that's just the core. **v0.4 is a full toolchain — [116 commands](https://xtanishkx.github.io/quantum/docs/commands/)** translating the DevOps stack to quantum:
 
 | | |
 |---|---|
@@ -48,6 +48,8 @@ toolchain knows that. Qontinuum does.
 | `qont shots plan` | **shot-count audits** — the napkin statistics, mechanized |
 | `qont report junit` | quantum checks rendered natively in Jenkins/GitLab/Buildkite |
 | `qont explain` | failure forensics: which outcomes drove the statistic, and why |
+| `qont recommend` / `plan` / `health` | **execution intelligence** — [reason about where to run](https://xtanishkx.github.io/quantum/docs/execution-intelligence/): fidelity, cost, speed, reliability, with explanations |
+| `qont plugin` | **provider-, backend-, and SDK-agnostic** — add hardware or SDKs via [plugins](https://xtanishkx.github.io/quantum/docs/plugins/), no fork |
 | + `circuit` `device` `registry` `stats` `bench` `watch` `config` `env` `doctor` `init` `mock` `schedule` … | the full plumbing |
 
 

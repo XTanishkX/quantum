@@ -29,7 +29,47 @@ class CostEstimate(BaseModel):
 @cache
 def load_catalog() -> dict:
     text = (resources.files("qontinuum.cost") / "catalog.yaml").read_text()
-    return yaml.safe_load(text)
+    catalog = yaml.safe_load(text)
+    _merge_plugin_fragments(catalog)
+    return catalog
+
+
+def _merge_plugin_fragments(catalog: dict) -> None:
+    """Fold in any pricing devices contributed by provider plugins.
+
+    Built-in providers contribute nothing (``catalog_fragment`` returns
+    ``None``), so a stock install is byte-for-byte the bundled catalog. A
+    third-party provider plugin can ship execution *and* pricing together by
+    returning ``{"display": ..., "devices": {...}}`` keyed under its
+    ``catalog_key``. Bundled devices always win a key collision.
+    """
+    from qontinuum.plugins import get_registry
+
+    providers = catalog.setdefault("providers", {})
+    for record in get_registry().records_for("provider"):
+        if not record.available:
+            continue
+        fragment = _plugin_fragment(record.plugin)
+        if not fragment:
+            continue
+        key = str(getattr(record.plugin, "catalog_key", record.name))
+        existing = providers.get(key)
+        if existing is None:
+            providers[key] = fragment
+        else:
+            devices = existing.setdefault("devices", {})
+            for device_id, device in fragment.get("devices", {}).items():
+                devices.setdefault(device_id, device)
+
+
+def _plugin_fragment(plugin: object) -> dict | None:
+    fn = getattr(plugin, "catalog_fragment", None)
+    if fn is None:
+        return None
+    try:
+        return fn()
+    except Exception:
+        return None
 
 
 def estimate_circuit(
