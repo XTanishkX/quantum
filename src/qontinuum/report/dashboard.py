@@ -9,7 +9,15 @@ from __future__ import annotations
 import html
 from datetime import datetime
 
+from qontinuum.intelligence import (
+    cost_series,
+    provider_comparison,
+    provider_usage,
+    summarize_executions,
+)
+
 _STATUS_COLOR = {"pass": "#2da44e", "fail": "#cf222e", "error": "#bf8700"}
+_BAR_COLOR = "#0969da"
 
 _CSS = """
 :root { color-scheme: light dark; }
@@ -46,6 +54,15 @@ def render_dashboard(records: list[dict], *, title: str = "Qontinuum dashboard")
         trend = _statistic_trends_svg(records)
         if trend:
             body += ["<h2>Check statistics over time</h2>", trend]
+        cost = _cost_trend_svg(records)
+        if cost:
+            body += ["<h2>Hardware cost estimate over time</h2>", cost]
+        usage = provider_usage(records)
+        if usage:
+            body += ["<h2>Provider usage</h2>", _bar_chart_svg(usage, unit=" runs")]
+        comparison = provider_comparison(records)
+        if comparison:
+            body += ["<h2>Provider comparison</h2>", _provider_table(comparison)]
         body += ["<h2>Recent runs</h2>", _runs_table(records)]
     generated = datetime.now().astimezone().isoformat(timespec="seconds")
     body.append(
@@ -63,13 +80,20 @@ def render_dashboard(records: list[dict], *, title: str = "Qontinuum dashboard")
 def _tiles(records: list[dict]) -> list[str]:
     last = records[-1]
     passes = sum(1 for r in records if r["status"] == "pass")
+    analytics = summarize_executions(records)
     tiles = [
         ("Runs recorded", str(len(records))),
         ("Pass rate", f"{passes / len(records):.0%}"),
         ("Last run", last["status"].upper()),
         ("Shots (last run)", f"{last.get('total_shots', 0):,}"),
     ]
-    if last.get("cheapest_usd") is not None:
+    if analytics.get("hardware_runs"):
+        tiles.append(("Hardware runs", str(analytics["hardware_runs"])))
+        if analytics.get("hardware_success_rate"):
+            tiles.append(("HW success rate", analytics["hardware_success_rate"]))
+    if analytics.get("estimated_spend_usd") is not None:
+        tiles.append(("Est. HW spend (total)", f"${analytics['estimated_spend_usd']:,.2f}"))
+    elif last.get("cheapest_usd") is not None:
         tiles.append(("Cheapest HW cost (last run)", f"${last['cheapest_usd']:,.2f}"))
     out = ["<div class='tiles'>"]
     for label, value in tiles:
@@ -163,6 +187,82 @@ def _statistic_trends_svg(records: list[dict], *, w: int = 900, h: int = 220) ->
         f"<svg viewBox='0 0 {w + 320} {h}' width='100%' role='img'"
         f" aria-label='check statistic trends'>{''.join(parts)}</svg>"
         "<p class='muted'>Dashed lines are the corresponding assertion thresholds.</p>"
+    )
+
+
+def _cost_trend_svg(records: list[dict], *, w: int = 900, h: int = 180) -> str:
+    """Line chart of the cheapest hardware estimate per run over time."""
+    series = cost_series(records)
+    if len(series) < 2:
+        return ""
+    values = [p["usd"] for p in series]
+    pad, plot_w, plot_h = 44, w - 64, h - 56
+    max_y = max(max(values) * 1.15, 1e-6)
+    max_x = max(1, len(series) - 1)
+
+    def sx(i: int) -> float:
+        return pad + i / max_x * plot_w
+
+    def sy(v: float) -> float:
+        return pad + (1 - v / max_y) * plot_h
+
+    points = " ".join(f"{sx(i):.1f},{sy(v):.1f}" for i, v in enumerate(values))
+    area = f"{pad},{pad + plot_h} {points} {pad + plot_w},{pad + plot_h}"
+    parts = [
+        f"<polygon points='{area}' fill='{_BAR_COLOR}22'/>",
+        f"<polyline points='{points}' fill='none' stroke='{_BAR_COLOR}' stroke-width='2'/>",
+        f"<line x1='{pad}' y1='{pad + plot_h}' x2='{pad + plot_w}' y2='{pad + plot_h}'"
+        " stroke='#8886'/>",
+        f"<text x='{pad - 6}' y='{pad + 4}' text-anchor='end' font-size='11'>"
+        f"${max_y:,.2f}</text>",
+        f"<text x='{pad - 6}' y='{pad + plot_h + 4}' text-anchor='end' font-size='11'>$0</text>",
+    ]
+    return (
+        f"<svg viewBox='0 0 {w} {h}' width='100%' role='img'"
+        f" aria-label='hardware cost estimate over time'>{''.join(parts)}</svg>"
+    )
+
+
+def _bar_chart_svg(counts: dict[str, int], *, unit: str = "", w: int = 900) -> str:
+    """Horizontal bars for a name→count mapping (e.g. provider usage)."""
+    if not counts:
+        return ""
+    items = list(counts.items())
+    row_h, label_w = 24, 220
+    bar_max = w - label_w - 90
+    top = max(counts.values()) or 1
+    rows = []
+    for i, (name, count) in enumerate(items):
+        y = i * row_h + 4
+        bar = max(2, count / top * bar_max)
+        rows.append(
+            f"<text x='0' y='{y + 14}' font-size='12'>{html.escape(name)}</text>"
+            f"<rect x='{label_w}' y='{y + 3}' width='{bar:.1f}' height='14' rx='3'"
+            f" fill='{_BAR_COLOR}'/>"
+            f"<text x='{label_w + bar + 6:.1f}' y='{y + 14}' font-size='11'>"
+            f"{count}{html.escape(unit)}</text>"
+        )
+    height = len(items) * row_h + 8
+    return (
+        f"<svg viewBox='0 0 {w} {height}' width='100%' role='img'"
+        f" aria-label='provider usage'>{''.join(rows)}</svg>"
+    )
+
+
+def _provider_table(rows: list[dict]) -> str:
+    body = []
+    for r in rows:
+        rate = f"{r['success_rate']:.0%}"
+        color = _STATUS_COLOR["pass"] if r["success_rate"] >= 0.9 else _STATUS_COLOR["error"]
+        dur = f"{r['avg_duration_ms']:,.0f} ms" if r.get("avg_duration_ms") is not None else "—"
+        body.append(
+            f"<tr><td><code>{html.escape(str(r['target']))}</code></td>"
+            f"<td>{r['runs']}</td>"
+            f"<td style='color:{color}'>{rate}</td><td>{dur}</td></tr>"
+        )
+    return (
+        "<table><thead><tr><th>Target</th><th>Runs</th><th>Success rate</th>"
+        f"<th>Avg duration</th></tr></thead><tbody>{''.join(body)}</tbody></table>"
     )
 
 

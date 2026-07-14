@@ -15,7 +15,9 @@ Public API::
 from qontinuum.intelligence.analytics import (
     cost_series,
     fidelity_series,
+    provider_comparison,
     provider_usage,
+    routing_decisions,
     summarize_executions,
 )
 from qontinuum.intelligence.health import assess_health, health_by_device
@@ -44,7 +46,9 @@ __all__ = [
     "estimate_runtime_s",
     "fidelity_series",
     "health_by_device",
+    "provider_comparison",
     "provider_usage",
     "recommend",
+    "routing_decisions",
     "summarize_executions",
 ]
