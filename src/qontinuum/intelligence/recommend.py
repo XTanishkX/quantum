@@ -54,10 +54,15 @@ def recommend(
     strategy: Strategy = Strategy.BALANCED,
     budget: float | None = None,
     health: list[ProviderHealth] | None = None,
+    community: object | None = None,
 ) -> list[Recommendation]:
-    """Rank devices for a workload under ``strategy``, best first."""
+    """Rank devices for a workload under ``strategy``, best first.
+
+    ``community`` is an optional intelligence-network aggregate; it is only used
+    to derive ``health`` when a pre-built ``health`` list is not supplied.
+    """
     if health is None:
-        health = assess_health(catalog)
+        health = assess_health(catalog, community=community)
     health_map = health_by_device(health)
     device_by_id = {
         device_id: device

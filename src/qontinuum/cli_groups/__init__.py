@@ -35,6 +35,7 @@ def register(app: typer.Typer) -> None:
         scaffold_cmds,
         shots_cmds,
         stats_cmds,
+        telemetry_cmds,
     )
 
     app.add_typer(config_cmds.app, name="config", rich_help_panel=PANEL_PROJECT)
@@ -46,6 +47,7 @@ def register(app: typer.Typer) -> None:
     app.add_typer(device_cmds.app, name="device", rich_help_panel=PANEL_HARDWARE)
     app.add_typer(providers_cmds.app, name="providers", rich_help_panel=PANEL_HARDWARE)
     app.add_typer(plugin_cmds.app, name="plugin", rich_help_panel=PANEL_HARDWARE)
+    app.add_typer(telemetry_cmds.app, name="telemetry", rich_help_panel=PANEL_INTEL)
     app.add_typer(history_cmds.app, name="history", rich_help_panel=PANEL_STATE)
     app.add_typer(budget_cmds.app, name="budget", rich_help_panel=PANEL_STATE)
     app.add_typer(cache_cmds.app, name="cache", rich_help_panel=PANEL_STATE)

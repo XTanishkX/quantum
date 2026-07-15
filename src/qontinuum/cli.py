@@ -301,6 +301,20 @@ def run(
             outcome=suite.status.value,
         )
         append_history(path, suite, cheapest_usd=estimated, execution=execution)
+
+        # Opt-in, anonymous: a no-op unless `qont telemetry enable` was run.
+        from qontinuum import telemetry
+
+        telemetry.capture(
+            path,
+            {
+                "created_at": suite.created_at.isoformat(timespec="seconds"),
+                "tool_version": suite.tool_version,
+                "status": suite.status.value,
+                "total_shots": sum(t.shots for t in suite.tests),
+                "execution": execution.model_dump(),
+            },
+        )
     raise typer.Exit(_exit_code(suite))
 
 
