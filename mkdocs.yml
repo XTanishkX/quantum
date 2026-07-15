@@ -46,4 +46,6 @@ nav:
       - Observability & history DB: observability.md
   - Extending:
       - Plugins (providers, backends, SDKs): plugins.md
+  - Releases:
+      - "0.4.0 — Execution Intelligence": release-0.4.0.md
   - Launch notes: launch-notes.md

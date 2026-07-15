@@ -4,12 +4,15 @@ All notable changes to Qontinuum are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/); versions follow
 [Semantic Versioning](https://semver.org/) (pre-1.0: minor bumps may break).
 
-## [Unreleased] — 0.4.0 "Execution Intelligence" (in progress)
+## [0.4.0] — 2026-07-15 · "Execution Intelligence"
 
-Qontinuum starts to *reason* about executions, not just run them. A new
+Qontinuum grows from a quantum DevOps toolchain into the **Quantum Engineering
+Platform**. It starts to *reason* about executions, not just run them: a new
 rule-based, provider-agnostic, fully-offline intelligence layer turns the
 evidence already on hand — the cost catalog, published calibration quality, and
-local run history — into explainable recommendations and plans.
+local run history — into explainable recommendations and plans. This release
+also lands the provider/SDK **plugin architecture** and a **versioned execution
+history database** with richer dashboards.
 
 ### Added — `qontinuum.intelligence`
 
@@ -62,10 +65,11 @@ local run history — into explainable recommendations and plans.
 - **`qont history stats`** gains execution analytics (hardware run count,
   hardware success rate, per-provider usage). Existing JSON keys are preserved.
 
-## [0.3.0] — 2026-07-15
+## [0.3.0] — plugin architecture (released as part of 0.4.0)
 
-The "open platform" release: providers, simulator backends, and SDKs are now
-**plugins**. Anyone can `pip install` a package that adds a new provider or SDK
+The "open platform" milestone: providers, simulator backends, and SDKs are now
+**plugins**. Developed as its own phase; published together with 0.4.0 (there is
+no separate 0.3.0 on PyPI). Anyone can `pip install` a package that adds a new provider or SDK
 and `qont` discovers it automatically — no fork, no core changes.
 
 ### Added — plugin system

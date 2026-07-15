@@ -3,10 +3,45 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Qontinuum — CI/CD, testing & cost intelligence for quantum programs</title>
-<meta name="description" content="pytest + Infracost + Datadog for quantum computing. Statistical regression testing, multi-provider cost estimates on every PR, noise-aware CI, and spend-guarded hardware runs.">
+<title>Qontinuum — the Quantum Engineering Platform</title>
+<meta name="description" content="The open-source platform for quantum software engineering: statistical testing, cost intelligence, execution intelligence that reasons about where to run, provider-agnostic plugins, and offline observability — from your terminal to CI.">
 <meta name="theme-color" content="#07090f">
+<link rel="canonical" href="https://xtanishkx.github.io/quantum/">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚛️</text></svg>">
+
+<!-- Open Graph / Twitter -->
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Qontinuum">
+<meta property="og:title" content="Qontinuum — the Quantum Engineering Platform">
+<meta property="og:description" content="Statistical testing, cost intelligence, execution intelligence, provider-agnostic plugins, and observability for quantum programs. Open source, offline-first.">
+<meta property="og:url" content="https://xtanishkx.github.io/quantum/">
+<meta property="og:image" content="https://xtanishkx.github.io/quantum/og-card.svg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Qontinuum — the Quantum Engineering Platform">
+<meta name="twitter:description" content="Reason about your quantum executions: statistical testing, cost + execution intelligence, provider-agnostic plugins, observability. Open source.">
+<meta name="twitter:image" content="https://xtanishkx.github.io/quantum/og-card.svg">
+
+<!-- Structured data -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "name": "Qontinuum",
+  "applicationCategory": "DeveloperApplication",
+  "applicationSubCategory": "Quantum software engineering platform",
+  "operatingSystem": "Linux, macOS, Windows",
+  "description": "The open-source Quantum Engineering Platform: statistical testing, cost intelligence, execution intelligence, provider-agnostic plugins, and observability for quantum programs.",
+  "url": "https://xtanishkx.github.io/quantum/",
+  "downloadUrl": "https://pypi.org/project/qontinuum/",
+  "codeRepository": "https://github.com/XTanishkX/quantum",
+  "license": "https://www.apache.org/licenses/LICENSE-2.0",
+  "softwareVersion": "0.4.0",
+  "programmingLanguage": "Python",
+  "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" }
+}
+</script>
 <style>
   :root{
     --bg:#07090f; --bg2:#0b0e17; --panel:#10141f; --line:#1d2333;
@@ -133,7 +168,8 @@
 <nav>
   <div class="logo">⚛️ Q<span>ontinuum</span></div>
   <div class="links">
-    <a href="#test">Testing</a><a href="#cost">Cost</a><a href="#route">Routing</a>
+    <a href="#test">Testing</a><a href="#cost">Cost</a>
+    <a href="#intel">Intelligence</a><a href="#route">Routing</a>
     <a href="#observe">Observability</a>
     <a href="docs/">Docs</a>
     <a href="demo/dashboard.html">Live demo</a>
@@ -146,12 +182,12 @@
 <section id="hero">
   <canvas id="bloch"></canvas>
   <div class="wrap">
-    <div class="kicker" id="hero-kick">quantum devops · open source · apache-2.0</div>
+    <div class="kicker" id="hero-kick">the quantum engineering platform · open source · apache-2.0</div>
     <h1 id="hero-h1">Ship quantum code<br><span class="grad">like software.</span></h1>
     <p class="sub" id="hero-sub">Quantum programs return probability distributions, not values — and the same job
-      costs <b>$6 on one vendor, $961 on another</b>. Qontinuum is the missing delivery pipeline:
-      statistical regression testing, cost intelligence on every PR, noise-aware CI, and
-      spend-guarded hardware runs.</p>
+      costs <b>$6 on one vendor, $961 on another</b>. Qontinuum is the platform for quantum software
+      engineering: statistical testing, cost &amp; <b>execution intelligence</b> that reasons about
+      where to run, provider-agnostic plugins, and offline observability — from your terminal to CI.</p>
     <div class="install" id="hero-install">
       <span><span class="prompt">$</span> pip install qontinuum</span>
       <button onclick="navigator.clipboard.writeText('pip install qontinuum');this.textContent='copied!'">copy</button>
@@ -161,9 +197,9 @@
       <a class="btn" href="demo/dashboard.html">See a live dashboard →</a>
     </div>
     <div class="stat-strip" id="hero-stats">
-      <div class="stat"><div class="n" data-count="110">0</div><div class="l">CLI commands</div></div>
-      <div class="stat"><div class="n" data-count="9">0</div><div class="l">priced devices</div></div>
-      <div class="stat"><div class="n" data-count="221">0</div><div class="l">tests behind it</div></div>
+      <div class="stat"><div class="n" data-count="116">0</div><div class="l">CLI commands</div></div>
+      <div class="stat"><div class="n" data-count="6">0</div><div class="l">routing strategies</div></div>
+      <div class="stat"><div class="n" data-count="278">0</div><div class="l">tests behind it</div></div>
       <div class="stat"><div class="n" data-count="0">$0</div><div class="l">to run your whole CI</div></div>
     </div>
   </div>
@@ -313,15 +349,45 @@
   </div>
 </section>
 
+<!-- ============ EXECUTION INTELLIGENCE ============ -->
+<section id="intel">
+  <div class="wrap split">
+    <div>
+      <div class="kicker">06 · execution intelligence <span style="color:var(--violet)">· new in 0.4</span></div>
+      <h2>Don't just run it. <span class="grad">Reason about it.</span></h2>
+      <p class="sub">Running a circuit is an engineering decision, not a coin flip — the same job can
+        cost 100×, run 10× slower, or return noise instead of signal on the wrong device.
+        <b>qont recommend</b>, <b>qont plan</b>, and <b>qont health</b> turn the evidence you already
+        have — the cost catalog, published calibration, and your local run history — into ranked,
+        <em>explained</em> execution decisions. Rule-based, provider-agnostic, fully offline. No AI
+        model, no hardcoded vendors.</p>
+      <div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-top:1.4rem;font-family:var(--mono);font-size:.78rem">
+        <span style="border:1px solid var(--line);border-radius:999px;padding:.25rem .75rem;color:var(--cyan)">cost</span>
+        <span style="border:1px solid var(--line);border-radius:999px;padding:.25rem .75rem;color:var(--cyan)">fidelity</span>
+        <span style="border:1px solid var(--line);border-radius:999px;padding:.25rem .75rem;color:var(--cyan)">speed</span>
+        <span style="border:1px solid var(--line);border-radius:999px;padding:.25rem .75rem;color:var(--cyan)">value</span>
+        <span style="border:1px solid var(--line);border-radius:999px;padding:.25rem .75rem;color:var(--cyan)">reliability</span>
+        <span style="border:1px solid var(--line);border-radius:999px;padding:.25rem .75rem;background:linear-gradient(92deg,#0891b2,#7c3aed);border:none;color:#fff">balanced</span>
+      </div>
+      <p style="margin-top:1.2rem"><a href="docs/execution-intelligence/">Read the execution-intelligence guide →</a></p>
+    </div>
+    <div class="term" data-term>
+      <div class="bar"><i></i><i></i><i></i><em>qont recommend --strategy balanced</em></div>
+      <pre><span class="tline"><span class="d">$</span> <span class="c">qont recommend --strategy balanced</span></span><span class="tline"><span class="d"># optimizing for balanced</span></span><span class="tline"><span class="d">  #  device            success  cost     runtime  reliab.</span></span><span class="tline">  <b>1</b>  IBM Heron (PAYG)   <span class="g">93%</span>     $16.01   6s       <span class="c">99%</span></span><span class="tline">  2  IonQ Aria 1        <span class="g">95%</span>     $106.70  24s      <span class="c">99%</span></span><span class="tline">  3  Rigetti Cepheus    <span class="y">71%</span>     $10.00   24s      <span class="c">94%</span></span><span class="tline"> </span><span class="tline"><b>Why:</b> IBM Heron is the balanced pick for this workload.</span><span class="tline">  <span class="g">•</span> best balance of fidelity, value, reliability, speed</span><span class="tline">  <span class="g">•</span> reliability 99% <span class="d">(catalog)</span></span><span class="tline">  <span class="g">•</span> est. runtime ~6s <span class="d">(queue time not modeled)</span></span><span class="tline">  <span class="d">assumes: success is a per-shot survival estimate</span></span><span class="tline">  <span class="d">confidence: 70%</span></span></pre>
+    </div>
+  </div>
+</section>
+
 <!-- ============ OBSERVABILITY ============ -->
 <section id="observe" style="background:var(--bg2)">
   <div class="wrap">
-    <div class="kicker">06 · observability</div>
-    <h2>Watch your suite <span class="grad">drift.</span></h2>
-    <p class="sub">Every run appends to a local history. <b>qont dashboard</b> renders it as a single
-      self-contained HTML file — status timeline, every check's statistic trending against its
-      threshold, cost per run. No server, no JS dependencies. Statistics are captured even on
-      <em>passing</em> runs, so healthy suites chart too.</p>
+    <div class="kicker">07 · observability</div>
+    <h2>Watch your suite <span class="grad">drift.</span> Learn from every run.</h2>
+    <p class="sub">Every run appends to a versioned local execution database. <b>qont dashboard</b>
+      renders it as a single self-contained HTML file — status timeline, every check's statistic
+      trending against its threshold, hardware cost over time, provider usage, and per-provider
+      success rates. No server, no JS dependencies. And those same records feed the reliability
+      scores the recommendation engine reasons with — the platform gets smarter as you use it.</p>
     <div class="hero-ctas" style="margin-top:2rem">
       <a class="btn primary" href="demo/dashboard.html">Open the live demo dashboard →</a>
     </div>
@@ -329,7 +395,38 @@
       <div class="card"><div class="ico">🧮</div><h3>Soundness floor</h3><p>Assertions refuse thresholds that shot noise can't resolve — flaky-by-construction tests are config errors, not failures.</p></div>
       <div class="card"><div class="ico">🔐</div><h3>Content-addressed circuits</h3><p>Canonical hashing ignores register names & formatting. <span style="font-family:var(--mono)">qont diff</span> shows only semantic changes.</p></div>
       <div class="card"><div class="ico">📸</div><h3>Quantum snapshots</h3><p>Golden baselines compared with two-sample tests; circuit changes flag the snapshot stale — exactly like Jest.</p></div>
-      <div class="card"><div class="ico">🔌</div><h3>Bring your SDK</h3><p>Qiskit, QASM 2/3, Cirq circuits, PennyLane tapes — one loader, one runner, one report.</p></div>
+      <div class="card"><div class="ico">🔌</div><h3>Plugin ecosystem</h3><p>Providers, simulator backends & SDKs are <b>plugins</b>. Qiskit, QASM 2/3, Cirq, PennyLane, IBM & Braket ship built in — add your own via entry points, no fork.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ ROADMAP ============ -->
+<section id="roadmap">
+  <div class="wrap">
+    <div class="kicker">where this is going</div>
+    <h2>From a toolchain to a <span class="grad">platform.</span></h2>
+    <p class="sub">Qontinuum is built in the open, one releasable phase at a time. Everything below the
+      line is shipped and tested today; above it is the honest trajectory — no vaporware, no hype.</p>
+    <div class="cards">
+      <div class="card">
+        <div class="ico">✅</div><h3>Shipped</h3>
+        <p>Statistical testing &amp; snapshots · multi-provider cost intelligence · noise-aware CI ·
+          hardware routing &amp; the $0 spend guard · a provider/SDK <b>plugin architecture</b> ·
+          <b>execution intelligence</b> (recommend / plan / health) · a versioned execution history DB
+          and self-contained dashboards.</p>
+      </div>
+      <div class="card">
+        <div class="ico">🧭</div><h3>Next</h3>
+        <p>Deeper deployment intelligence: queue-time modelling, actual-vs-estimated cost variance,
+          reproducibility-aware scheduling, and richer AI-assisted failure explanations grounded in
+          your own run history.</p>
+      </div>
+      <div class="card">
+        <div class="ico">🌐</div><h3>Later — the intelligence network</h3>
+        <p>An <em>opt-in</em>, privacy-respecting cloud that turns anonymous execution metadata into
+          community hardware-reliability, queue, and cost analytics. Telemetry stays off by default;
+          the local database is already the ingestion format.</p>
+      </div>
     </div>
   </div>
 </section>
@@ -352,11 +449,13 @@
 
 <footer>
   <div class="wrap">
-    <div>⚛️ <b>Qontinuum</b> · Apache-2.0 · built from home, for everyone shipping quantum code</div>
+    <div>⚛️ <b>Qontinuum</b> · the Quantum Engineering Platform · Apache-2.0 · built in the open</div>
     <div>
+      <a href="docs/">Docs</a> ·
+      <a href="docs/execution-intelligence/">Intelligence</a> ·
+      <a href="https://github.com/XTanishkX/quantum/blob/main/CHANGELOG.md">Changelog</a> ·
       <a href="https://github.com/XTanishkX/quantum">GitHub</a> ·
       <a href="https://pypi.org/project/qontinuum/">PyPI</a> ·
-      <a href="https://github.com/XTanishkX/quantum/blob/main/EXPLAINER.md">Explainer</a> ·
       <a href="demo/dashboard.html">Demo dashboard</a>
     </div>
   </div>

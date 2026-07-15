@@ -5,7 +5,7 @@
 [![Python](https://img.shields.io/pypi/pyversions/qontinuum)](https://pypi.org/project/qontinuum/)
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue)](LICENSE)
 
-**CI/CD, noise-aware regression testing, and cost intelligence for quantum programs.**
+**The Quantum Engineering Platform — statistical testing, cost & execution intelligence, provider-agnostic plugins, and observability for quantum programs.**
 
 🌐 **[Website](https://xtanishkx.github.io/quantum/)** · 📚 **[Docs](https://xtanishkx.github.io/quantum/docs/)** · 📊 **[Live demo dashboard](https://xtanishkx.github.io/quantum/demo/dashboard.html)** · 📖 **[Explainer](EXPLAINER.md)**
 
@@ -22,6 +22,9 @@ toolchain knows that. Qontinuum does.
   (IonQ, Rigetti, IQM, AQT via Braket; IBM; Azure Quantum) before you spend a cent.
 - **`qont route`** — recommends hardware for your workload: estimated success probability ×
   price, ranked by `--optimize cost|fidelity|value`.
+- **`qont recommend` / `plan` / `health`** — *execution intelligence*: rank devices under six
+  strategies with a plain-English explanation of every choice, produce a concrete execution
+  plan with fallbacks, and score per-device reliability from calibration + your run history.
 - **`qont run --on ibm:… --max-cost 5`** — executes the suite on *real* hardware behind an
   all-or-nothing spend guard (default budget: $0 — it refuses until you authorize).
 - **`qont ci`** — one command for CI: run the suite, write a markdown report.
@@ -32,9 +35,11 @@ toolchain knows that. Qontinuum does.
 - **GitHub Action** — posts a sticky PR comment with regression results and the cost table.
 - **Noise-aware testing** — simulate against real IBM device calibration data, offline,
   for free.
-- **Bring your own SDK** — `load_circuit` also accepts Cirq circuits and PennyLane tapes.
+- **Plugin ecosystem** — providers, simulator backends, and SDKs are plugins; Qiskit, QASM
+  2/3, Cirq, PennyLane, IBM, and Braket ship built in, and you can add your own via entry
+  points without forking.
 
-…and that's just the core. **v0.4 is a full toolchain — [116 commands](https://xtanishkx.github.io/quantum/docs/commands/)** translating the DevOps stack to quantum:
+…and that's just the core. **v0.4 is the Quantum Engineering Platform — [116 commands](https://xtanishkx.github.io/quantum/docs/commands/)** translating the DevOps stack to quantum:
 
 | | |
 |---|---|
