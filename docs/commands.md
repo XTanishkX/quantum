@@ -1,6 +1,6 @@
 # Command reference
 
-All 123 commands. Every read command accepts `--json`; exit codes are `0` ok, `1` failures/findings, `2` usage/config, `3` guard refusal.
+All 124 commands. Every read command accepts `--json`; exit codes are `0` ok, `1` failures/findings, `2` usage/config, `3` guard refusal.
 
 ## Core & flat commands
 
@@ -206,6 +206,7 @@ Render suite results (from --from suite.json, or by running the suite).
 | Command | What it does |
 |---|---|
 | `qont report badge` | SVG status badge from the suite result. |
+| `qont report engineering` | Full engineering report: recommendation, plan, provider & cost analysis, history. |
 | `qont report html` | Self-contained HTML dashboard from run history (alias of qont dashboard). |
 | `qont report json` | The raw versioned suite-result JSON. |
 | `qont report junit` | JUnit XML — Jenkins/GitLab/Buildkite render quantum checks natively. |

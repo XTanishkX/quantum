@@ -94,6 +94,7 @@ def recommend(
                 usd=s.usd,
                 usd_per_success=s.usd_per_success,
                 runtime_s=runtime,
+                queue_s=(h.avg_queue_s if h else None),
                 reliability=reliability,
                 risks=_risks(s, h, budget),
             )

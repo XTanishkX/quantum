@@ -123,6 +123,62 @@ def html(
 
 
 @app.command()
+def engineering(
+    path: PathOpt = Path("."),
+    strategy: Annotated[str, typer.Option("--strategy", "-s")] = "balanced",
+    budget: Annotated[float | None, typer.Option("--budget")] = None,
+    out: OutOpt = None,
+) -> None:
+    """Full engineering report: recommendation, plan, provider & cost analysis, history."""
+    import qontinuum
+    from qontinuum.cost import estimate_suite, load_catalog, profile_circuit
+    from qontinuum.intelligence import (
+        Strategy,
+        assess_health,
+        build_plan,
+        summarize_executions,
+    )
+    from qontinuum.intelligence import recommend as run_recommend
+    from qontinuum.intelligence.planning import PlanningError
+    from qontinuum.report.engineering import render_engineering_report
+    from qontinuum.report.history import read_history
+    from qontinuum.runner.discovery import discover
+    from qontinuum.telemetry import load_community
+
+    try:
+        strat = Strategy.parse(strategy)
+    except ValueError as exc:
+        fail(str(exc))
+    if not path.exists():
+        fail(f"path not found: {path}")
+    items = discover(path)
+    if not items:
+        fail("no quantum tests found (looked for q_test_*.py)")
+
+    circuits = [item.test.build() for item in items]
+    profiles = [profile_circuit(qc) for qc in circuits]
+    shots = [item.test.shots for item in items]
+    catalog = load_catalog()
+    estimates = estimate_suite(list(zip(circuits, shots, strict=True)))
+    records = read_history(path)
+    healths = assess_health(catalog, records, community=load_community(path))
+    recs = run_recommend(
+        profiles, shots, estimates, catalog, strategy=strat, budget=budget, health=healths
+    )
+    try:
+        plan = build_plan(recs, strategy=strat, workload=str(path), budget=budget)
+    except PlanningError:
+        plan = None
+
+    report = render_engineering_report(
+        workload=str(path), strategy=strat.value, recommendations=recs, plan=plan,
+        healths=healths, estimates=estimates, analytics=summarize_executions(records),
+        tool_version=qontinuum.__version__,
+    )
+    _write(report, out)
+
+
+@app.command()
 def summary(
     source: FromOpt = None, path: PathOpt = Path("."), seed: SeedOpt = None,
 ) -> None:

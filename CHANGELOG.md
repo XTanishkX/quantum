@@ -33,10 +33,22 @@ recommendations improve for everyone — off by default, fully functional offlin
 - **`qont telemetry status | enable | disable | preview | sync | community |
   clear`** — with `preview` showing the literal payload for full transparency.
 
+### Added — planning completion & reporting
+
+- **Execution plans** now carry an **expected queue** (community-derived),
+  **risk level** (low/medium/high/blocked), and **confidence** — surfaced by
+  `qont plan`. Recommendations gained a `queue_s` field and provider health an
+  `avg_queue_s` signal from community intelligence.
+- **`qont report engineering`** — a full engineering report that ties the whole
+  intelligence layer into one document: execution plan (with risk + confidence),
+  ranked recommendations, provider analysis, cost analysis, and historical
+  context. Pure renderer, reusing the exact engine behind `recommend`/`plan`/
+  `health` so reports never disagree with the commands.
+
 ### Docs
 
-- New [Quantum Intelligence Network](intelligence-network.md) architecture guide
-  and [Privacy](privacy.md) contract.
+- New [Quantum Intelligence Network](intelligence-network.md) architecture guide,
+  [Privacy](privacy.md) contract, and [Reporting](reporting.md) guide.
 
 ## [0.4.0] — 2026-07-15 · "Execution Intelligence"
 

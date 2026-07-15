@@ -48,6 +48,7 @@ class ProviderHealth(BaseModel):
     community_success: float | None = None  # 0..1 from the intelligence network
     community_samples: int = 0
     avg_duration_ms: float | None = None
+    avg_queue_s: float | None = None  # community-reported typical queue wait
     recent_runs: int = 0
     recent_failures: int = 0
     calibration_age_days: int | None = None
@@ -87,6 +88,7 @@ class Recommendation(BaseModel):
     usd: float | None = None
     usd_per_success: float | None = None
     runtime_s: float | None = None
+    queue_s: float | None = None  # expected queue wait (community-derived; None offline)
     reliability: float | None = None
     risks: list[str] = Field(default_factory=list)
     score: float | None = None  # the strategy's ranking metric (lower = better)
@@ -102,8 +104,11 @@ class ExecutionPlan(BaseModel):
     device: str
     display: str
     estimated_runtime_s: float | None = None
+    estimated_queue_s: float | None = None
     estimated_cost_usd: float | None = None
     expected_fidelity: float | None = None
+    confidence: float = 0.0
+    risk_level: str = "unknown"  # low | medium | high | blocked | unknown
     within_budget: bool | None = None
     risks: list[str] = Field(default_factory=list)
     fallbacks: list[RejectedOption] = Field(default_factory=list)
