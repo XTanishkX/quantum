@@ -44,6 +44,7 @@ nav:
       - Backends & noise: backends.md
       - Execution intelligence: execution-intelligence.md
       - Observability & history DB: observability.md
+      - Reporting: reporting.md
       - Quantum Intelligence Network: intelligence-network.md
   - Privacy: privacy.md
   - Extending:

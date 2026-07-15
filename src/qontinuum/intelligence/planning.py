@@ -54,13 +54,33 @@ def build_plan(
         device=top.device,
         display=top.display,
         estimated_runtime_s=top.runtime_s,
+        estimated_queue_s=top.queue_s,
         estimated_cost_usd=top.usd,
         expected_fidelity=top.success_prob,
+        confidence=round(top.explanation.confidence if top.explanation else 0.0, 3),
+        risk_level=risk_level(top),
         within_budget=(None if budget is None else _within_budget(top, budget)),
         risks=top.risks,
         fallbacks=fallbacks,
         explanation=top.explanation or Explanation(summary=f"{top.display} selected."),
     )
+
+
+def risk_level(rec: Recommendation) -> str:
+    """A categorical execution-risk label from success probability and risk count.
+
+    ``low`` / ``medium`` / ``high`` for feasible devices; ``blocked`` when the
+    workload does not fit at all.
+    """
+    if not rec.feasible:
+        return "blocked"
+    success = rec.success_prob
+    n_risks = len(rec.risks)
+    if (success is not None and success < 0.5) or n_risks >= 3:
+        return "high"
+    if (success is not None and success < 0.8) or n_risks >= 1:
+        return "medium"
+    return "low"
 
 
 def _within_budget(r: Recommendation, budget: float | None) -> bool:

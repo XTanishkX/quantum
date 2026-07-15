@@ -112,9 +112,11 @@ def _assess_device(
             notes.append(f"only {runs} local run(s) — too few for an empirical rate")
 
     community_success = None
+    community_queue = None
     community_samples = int(getattr(community, "samples", 0) or 0)
     if community is not None and community_samples > 0:
         community_success = getattr(community, "success_rate", None)
+        community_queue = getattr(community, "avg_queue_s", None)
         if community_success is not None:
             sources.append("community")
 
@@ -133,6 +135,7 @@ def _assess_device(
         community_success=community_success,
         community_samples=community_samples,
         avg_duration_ms=avg_duration,
+        avg_queue_s=community_queue,
         recent_runs=runs,
         recent_failures=failures,
         calibration_age_days=age_days,
