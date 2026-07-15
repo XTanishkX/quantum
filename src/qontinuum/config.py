@@ -24,6 +24,19 @@ KNOWN_KEYS: dict[str, tuple[Any, str]] = {
     "lint.ignore": ([], "Lint rule codes to skip, e.g. [\"Q003\"]"),
     "cache.enabled": (False, "Reuse cached results for unchanged seeded runs"),
     "report.junit_suite_name": ("qontinuum", "Suite name used in JUnit XML output"),
+    "telemetry.enabled": (
+        False,
+        "Opt-in: contribute anonymous hardware-execution metadata to the "
+        "Quantum Intelligence Network (off by default; fully functional offline)",
+    ),
+    "telemetry.endpoint": (
+        "",
+        "Intelligence Network HTTPS endpoint; empty means queue locally only",
+    ),
+    "telemetry.install_id": (
+        "",
+        "Anonymous random id generated on opt-in — contains no personal data",
+    ),
 }
 
 

@@ -24,22 +24,54 @@ _MIN_EMPIRICAL_RUNS = 3
 
 
 def assess_health(
-    catalog: dict, records: list[dict] | None = None, *, now: datetime | None = None
+    catalog: dict,
+    records: list[dict] | None = None,
+    *,
+    now: datetime | None = None,
+    community: object | None = None,
 ) -> list[ProviderHealth]:
-    """One :class:`ProviderHealth` per catalog device."""
+    """One :class:`ProviderHealth` per catalog device.
+
+    ``community`` is an optional :class:`~qontinuum.telemetry.schema.CommunityAggregate`
+    (or anything exposing ``.devices``): when present, each device blends in the
+    network's success rate, attributed as a ``community`` data source. It is
+    always additive — omitting it reproduces the offline, catalog+history result.
+    """
     now = now or datetime.now(UTC)
     age_days = _catalog_age_days(catalog, now)
     empirical = _empirical_by_device(records or [], catalog)
+    community_devices = _community_by_device(getattr(community, "devices", {}) or {}, catalog)
 
     out: list[ProviderHealth] = []
     for provider in catalog.get("providers", {}).values():
         for device_id, device in provider.get("devices", {}).items():
             out.append(
                 _assess_device(
-                    provider["display"], device_id, device, age_days, empirical.get(device_id)
+                    provider["display"], device_id, device, age_days,
+                    empirical.get(device_id), community_devices.get(device_id),
                 )
             )
     out.sort(key=lambda h: (-(h.reliability or -1.0), h.device))
+    return out
+
+
+def _community_by_device(community_devices: dict, catalog: dict) -> dict:
+    """Map community keys (run targets) onto catalog device ids leniently.
+
+    Contributors key stats by their run target (e.g. ``braket:rigetti_cepheus``),
+    while the catalog and health use the device id (``rigetti_cepheus``); the same
+    token-overlap match used for local history reconciles the two.
+    """
+    device_ids = [
+        device_id
+        for provider in catalog.get("providers", {}).values()
+        for device_id in provider.get("devices", {})
+    ]
+    out: dict = {}
+    for key, stat in community_devices.items():
+        matched = key if key in device_ids else _match_device(str(key), device_ids)
+        if matched is not None:
+            out[matched] = stat
     return out
 
 
@@ -54,6 +86,7 @@ def _assess_device(
     device: dict,
     age_days: int | None,
     empirical: dict | None,
+    community: object | None = None,
 ) -> ProviderHealth:
     quality = device.get("quality") or {}
     calibration_quality = _calibration_quality(quality)
@@ -78,7 +111,17 @@ def _assess_device(
         else:
             notes.append(f"only {runs} local run(s) — too few for an empirical rate")
 
-    reliability, confidence = _combine(calibration_quality, emp_success, runs, age_days, notes)
+    community_success = None
+    community_samples = int(getattr(community, "samples", 0) or 0)
+    if community is not None and community_samples > 0:
+        community_success = getattr(community, "success_rate", None)
+        if community_success is not None:
+            sources.append("community")
+
+    reliability, confidence = _combine(
+        calibration_quality, emp_success, runs, community_success, community_samples,
+        age_days, notes,
+    )
 
     return ProviderHealth(
         provider=provider_display,
@@ -87,6 +130,8 @@ def _assess_device(
         reliability=reliability,
         calibration_quality=calibration_quality,
         empirical_success=emp_success,
+        community_success=community_success,
+        community_samples=community_samples,
         avg_duration_ms=avg_duration,
         recent_runs=runs,
         recent_failures=failures,
@@ -115,34 +160,45 @@ def _combine(
     calibration_quality: float | None,
     empirical_success: float | None,
     runs: int,
+    community_success: float | None,
+    community_samples: int,
     age_days: int | None,
     notes: list[str],
 ) -> tuple[float | None, float]:
-    """Blend calibration and history into a reliability score + confidence."""
-    if calibration_quality is None and empirical_success is None:
+    """Blend calibration, local history, and community into reliability + confidence.
+
+    Each available signal contributes a value and a weight; reliability is their
+    weighted average. Calibration is a fixed-weight prior; local history and
+    community intelligence gain weight (and confidence) with their sample sizes.
+    """
+    if calibration_quality is None and empirical_success is None and community_success is None:
         notes.append("no calibration or history evidence — reliability unknown")
         return None, 0.1
 
+    signals: list[tuple[float, float]] = []
     confidence = 0.0
+
     if calibration_quality is not None:
+        signals.append((calibration_quality, 0.5))
         confidence += 0.5
         if age_days is not None and age_days > 90:
             confidence -= 0.15
             notes.append(f"calibration data is {age_days} days old")
 
     if empirical_success is not None:
-        # More runs → more trust, saturating around a couple dozen.
-        confidence += 0.5 * min(1.0, runs / 20)
-
-    if calibration_quality is None:
-        reliability = empirical_success
-    elif empirical_success is None:
-        reliability = calibration_quality
-        notes.append("reliability is calibration-only (no local run history)")
-    else:
-        # Weight history by sample size against a calibration prior.
         w = min(1.0, runs / 20)
-        reliability = (1 - w) * calibration_quality + w * empirical_success
+        signals.append((empirical_success, max(0.1, w)))
+        confidence += 0.4 * w
+    elif calibration_quality is not None and community_success is None:
+        notes.append("reliability is calibration-only (no local run history)")
+
+    if community_success is not None:
+        wc = min(1.0, community_samples / 50)
+        signals.append((community_success, 0.3 * max(0.1, wc)))
+        confidence += 0.2 * wc
+
+    total_weight = sum(w for _, w in signals)
+    reliability = sum(v * w for v, w in signals) / total_weight if total_weight else None
 
     return (round(reliability, 4) if reliability is not None else None), round(
         max(0.1, min(1.0, confidence)), 3

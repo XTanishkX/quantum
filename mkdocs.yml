@@ -44,6 +44,8 @@ nav:
       - Backends & noise: backends.md
       - Execution intelligence: execution-intelligence.md
       - Observability & history DB: observability.md
+      - Quantum Intelligence Network: intelligence-network.md
+  - Privacy: privacy.md
   - Extending:
       - Plugins (providers, backends, SDKs): plugins.md
   - Releases:

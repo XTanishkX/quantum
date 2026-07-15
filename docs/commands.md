@@ -1,6 +1,6 @@
 # Command reference
 
-All 116 commands. Every read command accepts `--json`; exit codes are `0` ok, `1` failures/findings, `2` usage/config, `3` guard refusal.
+All 123 commands. Every read command accepts `--json`; exit codes are `0` ok, `1` failures/findings, `2` usage/config, `3` guard refusal.
 
 ## Core & flat commands
 
@@ -258,6 +258,21 @@ Statistics on counts JSON files (flat dicts, runner output, or {'counts': ...}).
 | `qont stats entropy` | Shannon entropy of the empirical distribution. |
 | `qont stats fidelity` | Hellinger (classical) fidelity vs an expected distribution. |
 | `qont stats tvd` | Total variation distance vs an expected distribution. |
+
+## `qont telemetry`
+
+Opt-in, anonymous community intelligence (off by default). See the
+[Quantum Intelligence Network](intelligence-network.md) and [Privacy](privacy.md).
+
+| Command | What it does |
+|---|---|
+| `qont telemetry status` | Show consent, endpoint, queued records, and community cache. |
+| `qont telemetry enable` | Opt in to contributing anonymous execution metadata. |
+| `qont telemetry disable` | Opt out; nothing further is captured or sent. |
+| `qont telemetry preview` | Show exactly what would be contributed from your history. |
+| `qont telemetry sync` | Flush queued records to the network (safe offline). |
+| `qont telemetry community` | Show the locally cached community-intelligence snapshot. |
+| `qont telemetry clear` | Delete all locally queued records without sending them. |
 
 ## `qont watch`
 

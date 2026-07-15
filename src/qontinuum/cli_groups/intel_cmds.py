@@ -51,8 +51,11 @@ def _gather_workload(path: Path):
 def _health(path: Path, catalog: dict):
     from qontinuum.intelligence import assess_health
     from qontinuum.report.history import read_history
+    from qontinuum.telemetry import load_community
 
-    return assess_health(catalog, read_history(path))
+    # Community intelligence is used only if a snapshot has been synced locally;
+    # otherwise this is exactly the offline catalog + history assessment.
+    return assess_health(catalog, read_history(path), community=load_community(path))
 
 
 def _print_explanation(explanation) -> None:
@@ -185,6 +188,7 @@ def health(path: HealthPathOpt = Path("."), json_mode: JsonOpt = False) -> None:
             "reliability": h.reliability,
             "calibration": h.calibration_quality,
             "empirical": h.empirical_success,
+            "community": h.community_success,
             "runs": h.recent_runs,
             "sources": ", ".join(h.data_sources) or "—",
             "confidence": h.confidence,
@@ -194,11 +198,13 @@ def health(path: HealthPathOpt = Path("."), json_mode: JsonOpt = False) -> None:
     emit(rows, json_mode=False, title="provider health",
          columns=[("device", "Device"), ("provider", "Provider"),
                   ("reliability", "Reliability"), ("calibration", "Calib. quality"),
-                  ("empirical", "Empirical"), ("runs", "Runs"),
+                  ("empirical", "Empirical"), ("community", "Community"), ("runs", "Runs"),
                   ("sources", "Evidence"), ("confidence", "Confidence")],
-         right_align={"reliability", "calibration", "empirical", "runs", "confidence"})
-    console.print("[dim]Reliability blends catalog calibration with local run history; "
-                  "confidence reflects how much evidence backs each row.[/dim]")
+         right_align={"reliability", "calibration", "empirical", "community", "runs",
+                      "confidence"})
+    console.print("[dim]Reliability blends catalog calibration with local run history and "
+                  "(if synced) community intelligence; confidence reflects the evidence behind "
+                  "each row.[/dim]")
 
 
 def _json(obj) -> str:

@@ -33,6 +33,7 @@ against `examples/` (we eat our own cooking — quantum tests + cost comment).
 | `src/qontinuum/hardware` | real-QPU adapters (IBM, Braket) behind the all-or-nothing spend guard |
 | `src/qontinuum/plugins` | plugin protocols + registry; the built-in providers/backends/SDKs |
 | `src/qontinuum/intelligence` | execution intelligence: provider health, recommendation engine, planner, analytics (pure, provider-agnostic) |
+| `src/qontinuum/telemetry` | opt-in Quantum Intelligence Network: consent, privacy scrubber, outbox, HTTPS sync, community cache |
 | `src/qontinuum/report` | versioned JSON schema, markdown renderer, run history, HTML dashboard |
 | `action/` | the composite GitHub Action |
 

@@ -4,6 +4,40 @@ All notable changes to Qontinuum are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/); versions follow
 [Semantic Versioning](https://semver.org/) (pre-1.0: minor bumps may break).
 
+## [Unreleased] — 0.5.0 beta "Quantum Engineering Platform" (in progress)
+
+The first public-beta line. This phase lands the **Quantum Intelligence Network**:
+an optional, privacy-preserving way to pool anonymous engineering metadata so
+recommendations improve for everyone — off by default, fully functional offline.
+
+### Added — Quantum Intelligence Network (`qontinuum.telemetry`)
+
+- **Opt-in telemetry**, off by default (`telemetry.enabled`). Nothing is
+  captured, queued, or sent until `qont telemetry enable`; every command works
+  identically offline.
+- **Strict privacy allowlist.** A `TelemetryRecord` can only carry anonymous
+  engineering metadata (public provider/device ids, outcome, runtime, queue,
+  estimated cost, bucketed shots, calibration age, routing strategy, tool
+  version, calendar day, a random `install_id`). Circuits, distributions,
+  counts, snapshots, source, credentials, and identity have no field and are
+  never built.
+- **Local outbox** (`.qontinuum/telemetry/outbox.jsonl`) with sha256 integrity
+  signing (tampered lines dropped on read) and schema versioning; records leave
+  only on an explicit `qont telemetry sync`.
+- **Graceful offline sync** over HTTPS-only (insecure endpoints refused);
+  any failure keeps the queue intact. Community snapshots are schema-validated
+  before caching so a bad response can't poison recommendations.
+- **Community intelligence** blends a per-device `community` reliability signal
+  into `assess_health` (weighted by samples, attributed) — additive, so the
+  offline result is unchanged when no snapshot is present.
+- **`qont telemetry status | enable | disable | preview | sync | community |
+  clear`** — with `preview` showing the literal payload for full transparency.
+
+### Docs
+
+- New [Quantum Intelligence Network](intelligence-network.md) architecture guide
+  and [Privacy](privacy.md) contract.
+
 ## [0.4.0] — 2026-07-15 · "Execution Intelligence"
 
 Qontinuum grows from a quantum DevOps toolchain into the **Quantum Engineering

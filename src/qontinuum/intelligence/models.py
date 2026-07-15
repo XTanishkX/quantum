@@ -45,6 +45,8 @@ class ProviderHealth(BaseModel):
     reliability: float | None = None  # 0..1 composite fitness
     calibration_quality: float | None = None  # 0..1 from published error rates
     empirical_success: float | None = None  # 0..1 from local hardware history
+    community_success: float | None = None  # 0..1 from the intelligence network
+    community_samples: int = 0
     avg_duration_ms: float | None = None
     recent_runs: int = 0
     recent_failures: int = 0
