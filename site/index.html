@@ -37,7 +37,7 @@
   "downloadUrl": "https://pypi.org/project/qontinuum/",
   "codeRepository": "https://github.com/XTanishkX/quantum",
   "license": "https://www.apache.org/licenses/LICENSE-2.0",
-  "softwareVersion": "0.4.0",
+  "softwareVersion": "0.5.0",
   "programmingLanguage": "Python",
   "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" }
 }
@@ -197,9 +197,9 @@
       <a class="btn" href="demo/dashboard.html">See a live dashboard →</a>
     </div>
     <div class="stat-strip" id="hero-stats">
-      <div class="stat"><div class="n" data-count="116">0</div><div class="l">CLI commands</div></div>
+      <div class="stat"><div class="n" data-count="124">0</div><div class="l">CLI commands</div></div>
       <div class="stat"><div class="n" data-count="6">0</div><div class="l">routing strategies</div></div>
-      <div class="stat"><div class="n" data-count="278">0</div><div class="l">tests behind it</div></div>
+      <div class="stat"><div class="n" data-count="309">0</div><div class="l">tests behind it</div></div>
       <div class="stat"><div class="n" data-count="0">$0</div><div class="l">to run your whole CI</div></div>
     </div>
   </div>
@@ -409,23 +409,24 @@
       line is shipped and tested today; above it is the honest trajectory — no vaporware, no hype.</p>
     <div class="cards">
       <div class="card">
-        <div class="ico">✅</div><h3>Shipped</h3>
+        <div class="ico">✅</div><h3>Shipped — the platform</h3>
         <p>Statistical testing &amp; snapshots · multi-provider cost intelligence · noise-aware CI ·
           hardware routing &amp; the $0 spend guard · a provider/SDK <b>plugin architecture</b> ·
-          <b>execution intelligence</b> (recommend / plan / health) · a versioned execution history DB
-          and self-contained dashboards.</p>
+          <b>execution intelligence</b> (recommend / plan / health) with a full engineering report ·
+          a versioned execution history DB and self-contained dashboards.</p>
+      </div>
+      <div class="card">
+        <div class="ico">🌐</div><h3>Shipped — the intelligence network</h3>
+        <p>An <em>opt-in</em>, privacy-first way to pool <b>anonymous</b> execution metadata into
+          community hardware-reliability, queue, and cost signals that sharpen recommendations.
+          <b>Off by default</b>, fully functional offline; circuits, results, and identity never
+          leave your machine.</p>
       </div>
       <div class="card">
         <div class="ico">🧭</div><h3>Next</h3>
-        <p>Deeper deployment intelligence: queue-time modelling, actual-vs-estimated cost variance,
-          reproducibility-aware scheduling, and richer AI-assisted failure explanations grounded in
-          your own run history.</p>
-      </div>
-      <div class="card">
-        <div class="ico">🌐</div><h3>Later — the intelligence network</h3>
-        <p>An <em>opt-in</em>, privacy-respecting cloud that turns anonymous execution metadata into
-          community hardware-reliability, queue, and cost analytics. Telemetry stays off by default;
-          the local database is already the ingestion format.</p>
+        <p>Deeper deployment automation on top of the planner, actual-vs-estimated cost variance,
+          reproducibility-aware scheduling, and — if the community wants it — a hosted aggregation
+          endpoint (the client already speaks a documented, host-agnostic contract).</p>
       </div>
     </div>
   </div>
@@ -453,6 +454,8 @@
     <div>
       <a href="docs/">Docs</a> ·
       <a href="docs/execution-intelligence/">Intelligence</a> ·
+      <a href="docs/privacy/">Privacy</a> ·
+      <a href="docs/security/">Security</a> ·
       <a href="https://github.com/XTanishkX/quantum/blob/main/CHANGELOG.md">Changelog</a> ·
       <a href="https://github.com/XTanishkX/quantum">GitHub</a> ·
       <a href="https://pypi.org/project/qontinuum/">PyPI</a> ·

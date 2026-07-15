@@ -44,5 +44,5 @@
     <rect x="90" y="536" width="230" height="46" rx="10" fill="#10141f" stroke="#1d2333"/>
     <text x="110" y="565" fill="#34d399">$ pip install qontinuum</text>
   </g>
-  <text x="352" y="565" font-family="SF Mono,ui-monospace,Menlo,monospace" font-size="20" fill="#8b94a7">Apache-2.0 · open source · v0.4.0</text>
+  <text x="352" y="565" font-family="SF Mono,ui-monospace,Menlo,monospace" font-size="20" fill="#8b94a7">Apache-2.0 · open source · v0.5.0 beta</text>
 </svg>
