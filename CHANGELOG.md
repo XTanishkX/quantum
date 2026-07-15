@@ -4,11 +4,14 @@ All notable changes to Qontinuum are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/); versions follow
 [Semantic Versioning](https://semver.org/) (pre-1.0: minor bumps may break).
 
-## [Unreleased] — 0.5.0 beta "Quantum Engineering Platform" (in progress)
+## [0.5.0] — 2026-07-15 · "Quantum Engineering Platform" (public beta)
 
-The first public-beta line. This phase lands the **Quantum Intelligence Network**:
-an optional, privacy-preserving way to pool anonymous engineering metadata so
+The first public beta — the release where Qontinuum becomes a complete Quantum
+Engineering Platform. Headlined by the **Quantum Intelligence Network**: an
+optional, privacy-preserving way to pool anonymous engineering metadata so
 recommendations improve for everyone — off by default, fully functional offline.
+Also completes the execution planner, adds a full engineering report, and ships a
+documented security and privacy posture. Fully backwards compatible.
 
 ### Added — Quantum Intelligence Network (`qontinuum.telemetry`)
 

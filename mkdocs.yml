@@ -47,8 +47,10 @@ nav:
       - Reporting: reporting.md
       - Quantum Intelligence Network: intelligence-network.md
   - Privacy: privacy.md
+  - Security: security.md
   - Extending:
       - Plugins (providers, backends, SDKs): plugins.md
   - Releases:
+      - "0.5.0 — Public beta": release-0.5.0.md
       - "0.4.0 — Execution Intelligence": release-0.4.0.md
   - Launch notes: launch-notes.md
